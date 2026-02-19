@@ -12,8 +12,19 @@ import {
     FiShield
 } from "react-icons/fi";
 import { invoices } from "@/data/mockData";
+import { useModal } from "@/context/ModalContext";
 
 const BillingPage = () => {
+    const { openModal } = useModal();
+
+    const handleProcessPayment = (inv?: typeof invoices[0]) => {
+        openModal("PAYMENT", {
+            patientId: inv ? inv.patient.toLowerCase().replace(" ", "-") : "manual",
+            patientName: inv ? inv.patient : "Manual Entry",
+            amount: inv ? inv.amount : 157.50,
+            invoiceId: inv ? inv.id : undefined,
+        });
+    };
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
@@ -101,6 +112,14 @@ const BillingPage = () => {
                                         <td className="px-6 py-5 text-xs text-slate-500 font-medium">{inv.date}</td>
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {(inv.status === "Pending" || inv.status === "Overdue") && (
+                                                    <button
+                                                        onClick={() => handleProcessPayment(inv)}
+                                                        className="px-3 py-1 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-all"
+                                                    >
+                                                        Pay
+                                                    </button>
+                                                )}
                                                 <button className="p-2 text-slate-400 hover:text-primary"><FiDownload /></button>
                                                 <button className="p-2 text-slate-400 hover:text-slate-600"><FiMoreVertical /></button>
                                             </div>
@@ -138,7 +157,12 @@ const BillingPage = () => {
                                     <span className="text-xs font-bold text-slate-600">**** 4242</span>
                                     <span className="flex-1 text-right text-[10px] font-bold text-slate-400">04/24</span>
                                 </div>
-                                <button className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg"> Process Payment </button>
+                                <button
+                                    onClick={() => handleProcessPayment()}
+                                    className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg"
+                                >
+                                    Process Payment
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { FiUser, FiCalendar, FiClock, FiSearch, FiFileText } from "react-icons/fi";
 
 interface AppointmentModalProps {
@@ -16,7 +17,6 @@ interface AppointmentModalProps {
 const BookAppointmentModal = ({ isOpen, onClose, initialData, isLoading = false, onSubmit }: AppointmentModalProps) => {
     const isEditMode = !!initialData;
     const [formData, setFormData] = useState({
-        patientId: "", // In a real app, this would be selected
         patientName: "", // For display/search
         doctorId: "",
         type: "General Consultation",
@@ -26,27 +26,26 @@ const BookAppointmentModal = ({ isOpen, onClose, initialData, isLoading = false,
     });
 
     useEffect(() => {
-        if (initialData) {
-            setFormData({
-                patientId: initialData.patientId || "",
-                patientName: initialData.patientName || "",
-                doctorId: initialData.doctorId || "",
-                type: initialData.type || "General Consultation",
-                date: initialData.date || "",
-                time: initialData.time || "",
-                notes: initialData.notes || ""
-            });
-        } else {
-            // Reset form when modal opens in non-edit mode
-            setFormData({
-                patientId: "",
-                patientName: "",
-                doctorId: "",
-                type: "General Consultation",
-                date: "",
-                time: "",
-                notes: ""
-            });
+        if (isOpen) {
+            if (initialData) {
+                setFormData({
+                    patientName: initialData.patientName || "",
+                    doctorId: initialData.doctorId || "",
+                    type: initialData.type || "General Consultation",
+                    date: initialData.date || "",
+                    time: initialData.time || "",
+                    notes: initialData.notes || ""
+                });
+            } else {
+                setFormData({
+                    patientName: "",
+                    doctorId: "",
+                    type: "General Consultation",
+                    date: "",
+                    time: "",
+                    notes: ""
+                });
+            }
         }
     }, [initialData, isOpen]);
 
@@ -54,6 +53,9 @@ const BookAppointmentModal = ({ isOpen, onClose, initialData, isLoading = false,
         e.preventDefault();
         if (onSubmit) {
             onSubmit(formData);
+        } else {
+            // Demo only: Close on submit if no handler
+            onClose();
         }
     };
 
@@ -71,52 +73,40 @@ const BookAppointmentModal = ({ isOpen, onClose, initialData, isLoading = false,
         >
             <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-4">
-                    <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1.5">
-                            {isEditMode ? "Patient" : "Search Patient"}
-                        </label>
-                        <div className="relative group">
-                            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search by name, ID or phone..."
-                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all read-only:bg-slate-100 read-only:text-slate-500"
-                                value={formData.patientName}
-                                onChange={e => handleChange("patientName", e.target.value)}
-                                readOnly={isEditMode} // Usually can't change patient on reschedule
-                            />
-                        </div>
-                    </div>
+                    <Input
+                        label={isEditMode ? "Patient Name" : "Search Patient"}
+                        placeholder="Search by name, ID or phone..."
+                        leftIcon={<FiSearch />}
+                        value={formData.patientName}
+                        onChange={e => handleChange("patientName", e.target.value)}
+                        required
+                        readOnly={isEditMode}
+                    />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Select Doctor</label>
-                            <select
-                                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all"
-                                value={formData.doctorId}
-                                onChange={e => handleChange("doctorId", e.target.value)}
-                            >
-                                <option value="" disabled>Select Doctor</option>
-                                <option value="dr-smith">Dr. Sarah Smith (General)</option>
-                                <option value="dr-wilson">Dr. James Wilson (Orthopedics)</option>
-                                <option value="dr-chen">Dr. Robert Chen (Pulmonology)</option>
-                                <option value="dr-ray">Dr. Lisa Ray (Cardiology)</option>
-                            </select>
-                        </div>
+                        <Select
+                            label="Select Doctor"
+                            options={[
+                                { label: "Dr. Sarah Smith (General)", value: "dr-smith" },
+                                { label: "Dr. James Wilson (Orthopedics)", value: "dr-wilson" },
+                                { label: "Dr. Robert Chen (Pulmonology)", value: "dr-chen" },
+                                { label: "Dr. Lisa Ray (Cardiology)", value: "dr-ray" }
+                            ]}
+                            value={formData.doctorId}
+                            onChange={e => handleChange("doctorId", e.target.value)}
+                        />
 
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Visit Type</label>
-                            <select
-                                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all"
-                                value={formData.type}
-                                onChange={e => handleChange("type", e.target.value)}
-                            >
-                                <option>General Consultation</option>
-                                <option>Follow-up Visit</option>
-                                <option>Lab Work / Testing</option>
-                                <option>Emergency</option>
-                            </select>
-                        </div>
+                        <Select
+                            label="Visit Type"
+                            options={[
+                                { label: "General Consultation", value: "General Consultation" },
+                                { label: "Follow-up Visit", value: "Follow-up Visit" },
+                                { label: "Lab Work / Testing", value: "Lab Work / Testing" },
+                                { label: "Emergency", value: "Emergency" }
+                            ]}
+                            value={formData.type}
+                            onChange={e => handleChange("type", e.target.value)}
+                        />
 
                         <Input
                             label="Appointment Date"
@@ -137,11 +127,11 @@ const BookAppointmentModal = ({ isOpen, onClose, initialData, isLoading = false,
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1.5">Reason for Visit / Notes</label>
+                        <label className="text-sm font-medium text-slate-700 mb-1.5 ml-1 block">Reason for Visit / Notes</label>
                         <div className="relative">
-                            <FiFileText className="absolute left-4 top-4 text-slate-400" />
+                            <FiFileText className="absolute left-3 top-3.5 text-slate-400 pointer-events-none" />
                             <textarea
-                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all resize-none"
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary focus:bg-white transition-all resize-none placeholder:text-slate-400"
                                 rows={3}
                                 placeholder="Brief description of symptoms or purpose of visit..."
                                 value={formData.notes}
