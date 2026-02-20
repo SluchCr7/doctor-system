@@ -1,26 +1,22 @@
 "use client";
 import React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
     FiArrowLeft,
     FiStar,
     FiUsers,
     FiCalendar,
-    FiClock,
     FiMail,
     FiPhone,
     FiAward,
     FiBookOpen,
     FiBarChart2
 } from "react-icons/fi";
-import { doctors } from "@/data/mockData";
+import { clinicDoctor, stats } from "@/data/mockData";
 
 const DoctorProfilePage = () => {
-    const { id } = useParams();
     const router = useRouter();
-    const doctor = doctors.find(d => d.id === id);
-
-    if (!doctor) return <div className="p-8 text-center text-slate-500 font-bold">Doctor not found</div>;
+    const doctor = clinicDoctor;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -79,7 +75,7 @@ const DoctorProfilePage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="medical-card p-6 bg-primary text-white">
                             <FiUsers className="w-8 h-8 mb-4 opacity-50" />
-                            <div className="text-2xl font-black">{doctor.patients}+</div>
+                            <div className="text-2xl font-black">{stats.totalPatients}+</div>
                             <div className="text-xs font-bold opacity-70 uppercase tracking-widest">Total Patients</div>
                         </div>
                         <div className="medical-card p-6 bg-secondary text-white">
