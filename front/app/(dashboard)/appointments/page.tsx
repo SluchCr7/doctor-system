@@ -8,7 +8,6 @@ import {
     HiChevronLeft,
     HiChevronRight,
     HiOutlineFunnel,
-    HiOutlineCalendarDays,
     HiOutlineArrowPath,
 } from "react-icons/hi2";
 import { appointments } from "@/data/mockData";
@@ -20,7 +19,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
-// ── Status Badge Variant Map ───────────────────────────────────────────────────
+// ── Status Badge Variant Map ──────────────────────────────────────────────────
 const statusVariant: Record<string, "success" | "warning" | "error" | "info"> = {
     Confirmed: "success",
     Pending: "warning",
@@ -28,7 +27,7 @@ const statusVariant: Record<string, "success" | "warning" | "error" | "info"> = 
     Cancelled: "error",
 };
 
-// ── Month/Day Extraction ───────────────────────────────────────────────────────
+// ── Month/Day Extraction ──────────────────────────────────────────────────────
 const getDateParts = (dateStr: string) => {
     const d = new Date(dateStr);
     return {
@@ -66,7 +65,7 @@ const AppointmentsPage = () => {
     const handleCancel = (appt: typeof appointments[0]) => {
         openModal("DELETE_CONFIRMATION", {
             title: "Cancel Appointment",
-            description: `Are you sure you want to cancel ${appt.patientName}'s appointment? This will notify the patient.`,
+            description: `Are you sure you want to cancel ${appt.patientName}'s appointment? This action will notify the patient.`,
             onConfirm: () => console.log("Cancelled:", appt.id),
         });
     };
@@ -75,7 +74,7 @@ const AppointmentsPage = () => {
         <div className="space-y-6">
             <PageHeader
                 title="Appointments"
-                subtitle="Manage patient bookings and doctor schedules."
+                subtitle="Manage patient bookings and the clinic schedule."
                 breadcrumbs={[
                     { label: "Dashboard", href: "/" },
                     { label: "Appointments", href: "/appointments" },
@@ -110,14 +109,16 @@ const AppointmentsPage = () => {
                                         { label: "Confirmed", value: "Confirmed" },
                                         { label: "Pending", value: "Pending" },
                                         { label: "Completed", value: "Completed" },
+                                        { label: "Cancelled", value: "Cancelled" },
                                     ]}
                                     className="min-w-[180px]"
                                 />
                                 <Select
                                     options={[
-                                        { label: "All Doctors", value: "all" },
-                                        { label: "Dr. Sarah Smith", value: "dr-smith" },
-                                        { label: "Dr. James Wilson", value: "dr-wilson" },
+                                        { label: "All Visit Types", value: "all" },
+                                        { label: "General Consultation", value: "General Consultation" },
+                                        { label: "Follow-up", value: "Follow-up" },
+                                        { label: "Emergency", value: "Emergency" },
                                     ]}
                                     className="min-w-[180px]"
                                 />
@@ -151,9 +152,10 @@ const AppointmentsPage = () => {
                                                 </div>
                                                 <h3 className="text-base font-bold text-slate-800">{appt.patientName}</h3>
                                                 <p className="text-sm text-slate-500">
-                                                    with <span className="font-semibold text-slate-700">{appt.doctorName}</span>
-                                                    {" • "}
                                                     {appt.reason}
+                                                    {appt.notes && (
+                                                        <span className="text-slate-400"> — {appt.notes}</span>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
@@ -174,21 +176,25 @@ const AppointmentsPage = () => {
                                                     <HiOutlineArrowPath className="w-4 h-4" />
                                                 </button>
                                                 {/* Confirm */}
-                                                <button
-                                                    title="Confirm Appointment"
-                                                    onClick={() => handleConfirm(appt)}
-                                                    className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all"
-                                                >
-                                                    <HiCheckCircle className="w-5 h-5" />
-                                                </button>
+                                                {appt.status === "Pending" && (
+                                                    <button
+                                                        title="Confirm Appointment"
+                                                        onClick={() => handleConfirm(appt)}
+                                                        className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all"
+                                                    >
+                                                        <HiCheckCircle className="w-5 h-5" />
+                                                    </button>
+                                                )}
                                                 {/* Cancel */}
-                                                <button
-                                                    title="Cancel Appointment"
-                                                    onClick={() => handleCancel(appt)}
-                                                    className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all"
-                                                >
-                                                    <HiXCircle className="w-5 h-5" />
-                                                </button>
+                                                {appt.status !== "Completed" && appt.status !== "Cancelled" && (
+                                                    <button
+                                                        title="Cancel Appointment"
+                                                        onClick={() => handleCancel(appt)}
+                                                        className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all"
+                                                    >
+                                                        <HiXCircle className="w-5 h-5" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -205,7 +211,7 @@ const AppointmentsPage = () => {
                             <div className="flex justify-between items-center mb-6">
                                 <div className="flex items-center gap-4">
                                     <Button variant="ghost" size="sm"><HiChevronLeft className="w-5 h-5" /></Button>
-                                    <h3 className="text-lg font-bold text-slate-800">February 2024</h3>
+                                    <h3 className="text-lg font-bold text-slate-800">February 2026</h3>
                                     <Button variant="ghost" size="sm"><HiChevronRight className="w-5 h-5" /></Button>
                                 </div>
                                 <Button
@@ -217,7 +223,7 @@ const AppointmentsPage = () => {
                                 </Button>
                             </div>
 
-                            <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-lg overflow-hidden border border-slate-200">
+                            <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200">
                                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
                                     <div key={day} className="bg-slate-50 p-2 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                         {day}
@@ -225,26 +231,31 @@ const AppointmentsPage = () => {
                                 ))}
                                 {Array.from({ length: 35 }).map((_, i) => {
                                     const day = i - 3;
-                                    const isCurrentMonth = day > 0 && day <= 29;
-                                    const hasAppt = isCurrentMonth && [15, 20, 21, 24].includes(day);
+                                    const isCurrentMonth = day > 0 && day <= 28;
+                                    const hasAppt = isCurrentMonth && [20, 21, 22].includes(day);
                                     const isToday = day === 20;
 
                                     return (
                                         <div
                                             key={i}
-                                            className={`min-h-[90px] bg-white p-2 transition-colors hover:bg-slate-50 cursor-pointer ${!isCurrentMonth && "bg-slate-50/50 opacity-50"}`}
+                                            className={`min-h-[90px] bg-white p-2 transition-colors hover:bg-slate-50 cursor-pointer ${!isCurrentMonth && "bg-slate-50/50 opacity-40"}`}
                                             onClick={() => isCurrentMonth && handleBook()}
                                         >
                                             <div className="flex justify-between items-start">
-                                                <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-primary text-white font-bold" : "text-slate-700"}`}>
+                                                <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-primary text-white font-bold" : "text-slate-600"}`}>
                                                     {isCurrentMonth ? day : ""}
                                                 </span>
                                             </div>
                                             {hasAppt && (
-                                                <div className="mt-1.5 space-y-1">
-                                                    <div className="px-1.5 py-0.5 bg-sky-50 border border-sky-100 text-sky-700 text-[10px] font-medium rounded truncate">
-                                                        {day === 20 ? "John Doe" : day === 21 ? "Jane S." : day === 15 ? "R. Johnson" : "E. Davis"}
-                                                    </div>
+                                                <div className="mt-1 space-y-1">
+                                                    {appointments
+                                                        .filter(a => new Date(a.date).getDate() === day)
+                                                        .slice(0, 2)
+                                                        .map(a => (
+                                                            <div key={a.id} className="px-1.5 py-0.5 bg-sky-50 border border-sky-100 text-sky-700 text-[10px] font-medium rounded truncate">
+                                                                {a.patientName.split(" ")[0]}
+                                                            </div>
+                                                        ))}
                                                 </div>
                                             )}
                                         </div>

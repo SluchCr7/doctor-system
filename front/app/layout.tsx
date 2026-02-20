@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ClinicDoc | Modern Healthcare Management",
-  description: "A professional medical clinic management system",
+  title: "ClinicDoc | Dr. Alexander Hayes — Private Practice",
+  description: "Professional single-doctor clinic management system for Dr. Alexander Hayes, General Medicine & Family Care.",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased text-slate-800 bg-slate-50 overflow-hidden`}>
+      <body className={`${inter.variable} font-sans antialiased text-slate-800 bg-slate-50`}>
         <ModalProvider>
           {children}
           <ModalRenderer />

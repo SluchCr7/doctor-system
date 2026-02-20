@@ -1,42 +1,59 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand Colors - Modern Medical Palette */
-  --color-primary: #0ea5e9; /* Sky 500 - Professional Blue */
-  --color-primary-light: #38bdf8; /* Sky 400 */
-  --color-primary-dark: #0284c7; /* Sky 600 */
+  /* ── Brand Colors — Modern Single-Doctor Medical Palette ──────────────────── */
+  --color-primary: #0ea5e9;
+  /* Sky 500  — Professional Blue */
+  --color-primary-light: #38bdf8;
+  /* Sky 400 */
+  --color-primary-dark: #0284c7;
+  /* Sky 600 */
 
-  --color-secondary: #0d9488; /* Teal 600 - Secondary Medical */
-  --color-secondary-light: #14b8a6; /* Teal 500 */
-  
-  --color-accent: #6366f1; /* Indigo 500 - For highlights */
-  --color-accent-light: #818cf8; /* Indigo 400 */
+  --color-secondary: #0d9488;
+  /* Teal 600 — Medical accent */
+  --color-secondary-light: #14b8a6;
+  /* Teal 500 */
 
-  /* Functional Colors */
-  --color-success: #10b981; /* Emerald 500 */
-  --color-warning: #f59e0b; /* Amber 500 */
-  --color-danger: #ef4444; /* Red 500 */
-  --color-info: #3b82f6; /* Blue 500 */
+  --color-accent: #6366f1;
+  /* Indigo 500 — Highlights */
+  --color-accent-light: #818cf8;
+  /* Indigo 400 */
 
-  /* Backgrounds */
-  --color-background-app: #f8fafc; /* Slate 50 - Main App BG */
-  --color-background-subtle: #f1f5f9; /* Slate 100 - Sub-sections */
-  --color-surface: #ffffff; /* White - Cards/Panels */
+  /* ── Semantic Colors ──────────────────────────────────────────────────────── */
+  --color-success: #10b981;
+  /* Emerald 500 */
+  --color-warning: #f59e0b;
+  /* Amber 500 */
+  --color-danger: #ef4444;
+  /* Red 500 */
+  --color-info: #3b82f6;
+  /* Blue 500 */
 
-  /* Typography */
-  --color-text-primary: #0f172a; /* Slate 900 - Headings */
-  --color-text-secondary: #475569; /* Slate 600 - Body */
-  --color-text-tertiary: #94a3b8; /* Slate 400 - Muted/Placeholders */
-  --color-text-inverted: #ffffff; /* White text on dark bg */
+  /* ── Backgrounds ─────────────────────────────────────────────────────────── */
+  --color-background-app: #f8fafc;
+  /* Slate 50 */
+  --color-background-subtle: #f1f5f9;
+  /* Slate 100 */
+  --color-surface: #ffffff;
+  /* Cards/Panels */
 
-  /* Shadows - Softer shadows for medical feel */
+  /* ── Typography ──────────────────────────────────────────────────────────── */
+  --color-text-primary: #0f172a;
+  /* Slate 900 */
+  --color-text-secondary: #475569;
+  /* Slate 600 */
+  --color-text-tertiary: #94a3b8;
+  /* Slate 400 */
+  --color-text-inverted: #ffffff;
+
+  /* ── Shadows ─────────────────────────────────────────────────────────────── */
   --shadow-subtle: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.02), 0 2px 4px -2px rgb(0 0 0 / 0.02);
   --shadow-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
   --shadow-dropdown: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
   --shadow-modal: 0 25px 50px -12px rgb(0 0 0 / 0.15);
 
-  /* Border Radius */
+  /* ── Border Radius ───────────────────────────────────────────────────────── */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -44,21 +61,26 @@
   --radius-2xl: 1.5rem;
 }
 
+/* ── Root Variables ─────────────────────────────────────────────────────────── */
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
 }
 
+/* ── Base Body ───────────────────────────────────────────────────────────────── */
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* NOTE: overflow-hidden intentionally removed — it blocked page scrolling */
 }
 
-/* Base Component Styles */
+/* ── Component Classes ───────────────────────────────────────────────────────── */
 @layer components {
+
+  /* Buttons */
   .btn {
     @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
   }
@@ -79,27 +101,48 @@ body {
     @apply bg-red-50 text-danger hover:bg-red-100 focus:ring-red-500 active:scale-95;
   }
 
+  /* Cards */
   .card {
     @apply bg-surface rounded-2xl border border-slate-100 shadow-card transition-all duration-300;
   }
 
   .card-hover {
-    @apply hover:shadow-card-hover hover:-translate-y-1 hover:border-slate-200;
+    @apply hover:shadow-card-hover hover:-translate-y-0.5 hover:border-slate-200;
   }
 
+  .medical-card {
+    @apply bg-white rounded-2xl border border-slate-100 shadow-card transition-all duration-300;
+  }
+
+  /* Form Fields */
   .input-field {
-    @apply block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all duration-200 outline-none;
+    @apply block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all duration-200 outline-none;
   }
 
+  .input-error {
+    @apply border-red-300 bg-red-50/50 focus:border-red-400 focus:ring-red-100;
+  }
+
+  /* Badges */
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-transparent;
   }
+
+  /* Glass Effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+
+  /* Page Fade-in */
+  .page-enter {
+    @apply animate-fade-in;
+  }
 }
 
-/* Custom Scrollbar */
+/* ── Custom Scrollbar ────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -107,15 +150,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+  @apply bg-slate-200 rounded-full;
 }
 
-/* Animations */
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300;
+}
+
+/* ── Keyframe Animations ─────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -125,11 +173,24 @@ body {
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateX(16px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -141,6 +202,12 @@ body {
   animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.glass {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+.animate-scale-in {
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Focus Ring ─────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }

@@ -1,3 +1,33 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// CLINIC DOCTOR — Static doctor profile (single-doctor system)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const clinicDoctor = {
+    id: "D001",
+    name: "Dr. Alexander Hayes",
+    title: "Dr.",
+    firstName: "Alexander",
+    lastName: "Hayes",
+    specialty: "General Medicine & Family Care",
+    qualifications: "MD, MBBS, MRCP",
+    experience: "14 years",
+    email: "dr.hayes@alexanderclinic.com",
+    phone: "+1 (888) 204-7700",
+    image: "https://i.pravatar.cc/150?u=alexander",
+    availability: "Mon – Fri",
+    clinicHours: "09:00 AM – 06:00 PM",
+    bio: "Dr. Hayes specializes in general medicine and preventive care, with over 14 years of clinical experience. He is committed to building long-term relationships with his patients through compassionate, evidence-based care.",
+    address: "42 Halcyon Medical Center, Suite 3, Downtown District",
+    rating: 4.9,
+    reviewCount: 312,
+    languagesSpoken: ["English", "French"],
+    licenseNumber: "MD-2010-4421",
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Patients
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const patients = [
     {
         id: "P001",
@@ -13,9 +43,9 @@ export const patients = [
         allergies: ["Penicillin", "Peanuts"],
         chronicDiseases: ["Hypertension"],
         history: [
-            { date: "2024-02-10", reason: "Annual Checkup", doctor: "Dr. Sarah Smith", diagnosis: "Healthy" },
-            { date: "2023-08-15", reason: "Fever", doctor: "Dr. James Wilson", diagnosis: "Common Cold" }
-        ]
+            { date: "2024-02-10", reason: "Annual Checkup", doctor: clinicDoctor.name, diagnosis: "Healthy, BP slightly elevated" },
+            { date: "2023-08-15", reason: "Fever & Fatigue", doctor: clinicDoctor.name, diagnosis: "Common Viral Infection" },
+        ],
     },
     {
         id: "P002",
@@ -31,8 +61,8 @@ export const patients = [
         allergies: ["Sulfa drugs"],
         chronicDiseases: ["Asthma"],
         history: [
-            { date: "2024-02-15", reason: "Shortness of breath", doctor: "Dr. Robert Chen", diagnosis: "Mild Asthma Flare-up" }
-        ]
+            { date: "2024-02-15", reason: "Shortness of breath", doctor: clinicDoctor.name, diagnosis: "Mild Asthma Flare-up" },
+        ],
     },
     {
         id: "P003",
@@ -48,8 +78,8 @@ export const patients = [
         allergies: [],
         chronicDiseases: ["Type 2 Diabetes"],
         history: [
-            { date: "2024-01-20", reason: "Diabetes Follow-up", doctor: "Dr. Sarah Smith", diagnosis: "Stable" }
-        ]
+            { date: "2024-01-20", reason: "Diabetes Follow-up", doctor: clinicDoctor.name, diagnosis: "Stable — A1C improved" },
+        ],
     },
     {
         id: "P004",
@@ -65,111 +95,104 @@ export const patients = [
         allergies: ["Latex"],
         chronicDiseases: [],
         history: [
-            { date: "2024-02-05", reason: "Sprained Ankle", doctor: "Dr. James Wilson", diagnosis: "Grade 1 Sprain" }
-        ]
-    }
+            { date: "2024-02-05", reason: "Sprained Ankle", doctor: clinicDoctor.name, diagnosis: "Grade 1 Sprain" },
+        ],
+    },
+    {
+        id: "P005",
+        name: "Michael Chen",
+        age: 41,
+        gender: "Male",
+        phone: "+1 234-567-8905",
+        email: "m.chen@example.com",
+        address: "654 Birch Lane, Eastside",
+        lastVisit: "2024-02-18",
+        status: "Regular",
+        bloodGroup: "O-",
+        allergies: ["Aspirin"],
+        chronicDiseases: ["Hypertension", "High Cholesterol"],
+        history: [
+            { date: "2024-02-18", reason: "Lipid Panel Review", doctor: clinicDoctor.name, diagnosis: "Cholesterol moderately elevated — medication adjusted" },
+        ],
+    },
 ];
 
-export const doctors = [
-    {
-        id: "D001",
-        name: "Dr. Sarah Smith",
-        specialty: "General Medicine",
-        experience: "15 years",
-        email: "sarah.smith@clinic.com",
-        phone: "+1 888-123-4567",
-        image: "https://i.pravatar.cc/150?u=sarah",
-        availability: "Mon, Wed, Fri",
-        patients: 450,
-        rating: 4.9
-    },
-    {
-        id: "D002",
-        name: "Dr. James Wilson",
-        specialty: "Orthopedics",
-        experience: "10 years",
-        email: "james.wilson@clinic.com",
-        phone: "+1 888-123-4568",
-        image: "https://i.pravatar.cc/150?u=james",
-        availability: "Tue, Thu, Sat",
-        patients: 320,
-        rating: 4.8
-    },
-    {
-        id: "D003",
-        name: "Dr. Robert Chen",
-        specialty: "Pulmonology",
-        experience: "12 years",
-        email: "robert.chen@clinic.com",
-        phone: "+1 888-123-4569",
-        image: "https://i.pravatar.cc/150?u=robert",
-        availability: "Mon, Tue, Wed",
-        patients: 280,
-        rating: 4.7
-    },
-    {
-        id: "D004",
-        name: "Dr. Lisa Ray",
-        specialty: "Cardiology",
-        experience: "20 years",
-        email: "lisa.ray@clinic.com",
-        phone: "+1 888-123-4570",
-        image: "https://i.pravatar.cc/150?u=lisa",
-        availability: "Mon, Thu, Fri",
-        patients: 600,
-        rating: 5.0
-    }
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// Appointments (all linked to the single clinic doctor)
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const appointments = [
     {
         id: "A001",
         patientName: "John Doe",
-        doctorName: "Dr. Sarah Smith",
-        date: "2024-02-20",
+        patientId: "P001",
+        date: "2026-02-20",
         time: "09:00 AM",
         status: "Confirmed",
-        reason: "Checkup"
+        reason: "Annual Checkup",
+        notes: "Patient requested follow-up on BP readings.",
     },
     {
         id: "A002",
         patientName: "Jane Smith",
-        doctorName: "Dr. Robert Chen",
-        date: "2024-02-20",
+        patientId: "P002",
+        date: "2026-02-20",
         time: "10:30 AM",
         status: "Pending",
-        reason: "Asthma Review"
+        reason: "Asthma Review",
+        notes: "Bring latest inhaler and peak flow meter records.",
     },
     {
         id: "A003",
         patientName: "Robert Johnson",
-        doctorName: "Dr. Sarah Smith",
-        date: "2024-02-21",
+        patientId: "P003",
+        date: "2026-02-21",
         time: "11:00 AM",
         status: "Confirmed",
-        reason: "Blood Test"
+        reason: "Diabetes Follow-up",
+        notes: "Blood glucose log required.",
     },
     {
         id: "A004",
         patientName: "Emily Davis",
-        doctorName: "Dr. James Wilson",
-        date: "2024-02-21",
+        patientId: "P004",
+        date: "2026-02-21",
         time: "02:00 PM",
         status: "Completed",
-        reason: "Checkup"
-    }
+        reason: "Ankle Follow-up",
+        notes: "X-ray results to be reviewed.",
+    },
+    {
+        id: "A005",
+        patientName: "Michael Chen",
+        patientId: "P005",
+        date: "2026-02-22",
+        time: "09:30 AM",
+        status: "Confirmed",
+        reason: "Lipid Panel Review",
+        notes: "Bring updated lipid panel test results.",
+    },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Clinic-level Stats (no multi-doctor metrics)
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const stats = {
     totalPatients: 1284,
-    todayAppointments: 36,
+    todayAppointments: 8,
     pendingPayments: 4820,
-    activeDoctors: 8
+    monthlyRevenue: 12840,
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Invoices
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const invoices = [
-    { id: "INV-001", patient: "John Doe", amount: 150, status: "Paid", date: "2024-02-10" },
-    { id: "INV-002", patient: "Jane Smith", amount: 200, status: "Pending", date: "2024-02-15" },
-    { id: "INV-003", patient: "Robert Johnson", amount: 75, status: "Paid", date: "2024-01-20" },
-    { id: "INV-004", patient: "Emily Davis", amount: 120, status: "Overdue", date: "2024-01-15" }
+    { id: "INV-001", patient: "John Doe", patientId: "P001", service: "Annual Checkup", amount: 150, status: "Paid", date: "2024-02-10" },
+    { id: "INV-002", patient: "Jane Smith", patientId: "P002", service: "Asthma Consultation", amount: 200, status: "Pending", date: "2024-02-15" },
+    { id: "INV-003", patient: "Robert Johnson", patientId: "P003", service: "Diabetes Follow-up", amount: 75, status: "Paid", date: "2024-01-20" },
+    { id: "INV-004", patient: "Emily Davis", patientId: "P004", service: "Emergency Consultation", amount: 120, status: "Overdue", date: "2024-01-15" },
+    { id: "INV-005", patient: "Michael Chen", patientId: "P005", service: "Lipid Panel Review", amount: 95, status: "Paid", date: "2024-02-18" },
 ];

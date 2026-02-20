@@ -114,9 +114,11 @@ const MedicalRecordsPage = () => {
 
                         <div className="pt-6 border-t border-slate-100 flex justify-between items-center">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full border border-slate-200"></div>
+                                <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200">
+                                    <img src="https://i.pravatar.cc/150?u=alexander" alt="Dr. Alexander Hayes" className="w-full h-full object-cover" />
+                                </div>
                                 <div>
-                                    <div className="text-sm font-bold text-slate-800">Dr. Sarah Smith</div>
+                                    <div className="text-sm font-bold text-slate-800">Dr. Alexander Hayes</div>
                                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Attending Physician</div>
                                 </div>
                             </div>
