@@ -14,7 +14,7 @@ import {
     FiDownload,
     FiEdit3
 } from "react-icons/fi";
-import { patients } from "@/data/mockData";
+import { patients, clinicDoctor } from "@/data/mockData";
 
 const PatientProfilePage = () => {
     const { id } = useParams();
@@ -27,7 +27,7 @@ const PatientProfilePage = () => {
         return <div className="p-8 text-center">Patient not found</div>;
     }
 
-    const tabs = ["Information", "Medical History", "Prescriptions", "Billing", "Files"];
+    const tabs = ["Information", "Medical History", "Prescriptions", "Billing", "Files & Results"];
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -111,12 +111,12 @@ const PatientProfilePage = () => {
                 {/* Right Column: Detailed Info */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* Tabs */}
-                    <div className="bg-white p-1 rounded-xl border border-slate-200 inline-flex shadow-sm">
+                    <div className="bg-white p-1 rounded-xl border border-slate-200 inline-flex shadow-sm overflow-x-auto max-w-full">
                         {tabs.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === tab ? "bg-primary text-white shadow-md shadow-primary/20" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                className={`px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab ? "bg-primary text-white shadow-md shadow-primary/20" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                                     }`}
                             >
                                 {tab}
@@ -187,7 +187,7 @@ const PatientProfilePage = () => {
                                                     <FiActivity className="w-6 h-6" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-slate-800">Amoxicillin 500mg</h4>
+                                                    <h4 className="font-bold text-slate-800 text-sm">Amoxicillin 500mg</h4>
                                                     <p className="text-xs text-slate-400 font-medium">1 tablet • 3 times daily • 7 days</p>
                                                 </div>
                                             </div>
@@ -195,6 +195,61 @@ const PatientProfilePage = () => {
                                                 <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">Status</div>
                                                 <span className="px-2 py-0.5 bg-accent/10 text-accent text-[10px] font-bold rounded-full">ACTIVE</span>
                                             </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "Billing" && (
+                            <div className="animate-in fade-in duration-500">
+                                <h3 className="text-xl font-bold text-slate-800 mb-6">Payment History</h3>
+                                <div className="space-y-3">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm">
+                                                    <FiCreditCard className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-800">Consultation Fee</p>
+                                                    <p className="text-[10px] text-slate-400 font-medium">Feb {10 + i}, 2024 • Paid via Card</p>
+                                                </div>
+                                            </div>
+                                            <span className="font-black text-slate-700">$150.00</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "Files & Results" && (
+                            <div className="animate-in fade-in duration-500">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-slate-800">Medical Documents & Lab Results</h3>
+                                    <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-primary/30 text-primary rounded-xl text-xs font-bold hover:bg-primary/5 transition-all">
+                                        <FiPlus /> Upload New File
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[
+                                        { name: "Blood Test Results.pdf", date: "2024-02-10", size: "2.4 MB", type: "Lab Result" },
+                                        { name: "Chest X-Ray.jpg", date: "2023-08-15", size: "12.8 MB", type: "Imaging" },
+                                        { name: "Vaccination Record.pdf", date: "2023-05-20", size: "1.1 MB", type: "Record" },
+                                    ].map((file, i) => (
+                                        <div key={i} className="p-4 border border-slate-100 rounded-2xl bg-white flex justify-between items-center hover:border-primary/20 hover:shadow-sm transition-all group">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                                                    <FiFileText className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-slate-800 text-sm truncate max-w-[150px]">{file.name}</h4>
+                                                    <p className="text-[10px] text-slate-400 font-medium">{file.type} • {file.date} • {file.size}</p>
+                                                </div>
+                                            </div>
+                                            <button className="p-2 text-slate-300 hover:text-primary transition-colors">
+                                                <FiDownload className="w-5 h-5" />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>

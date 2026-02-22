@@ -19,11 +19,11 @@ export default function SettingsLayout({
     const pathname = usePathname();
 
     const navItems = [
-        { label: "Clinic Profile", icon: FiGlobe, path: "/settings/clinic" },
+        { label: "Doctor Profile", icon: FiUser, path: "/settings/doctor" },
+        { label: "Clinic Information", icon: FiGlobe, path: "/settings/clinic" },
         { label: "Working Hours", icon: FiClock, path: "/settings/hours" },
-        { label: "Notifications", icon: FiBell, path: "/settings/notifications" },
-        { label: "Security & 2FA", icon: FiLock, path: "/settings/security" },
-        { label: "Account", icon: FiUser, path: "/settings/account" },
+        { label: "User Roles", icon: FiLock, path: "/settings/roles" },
+        { label: "Data Backup", icon: FiSave, path: "/settings/backup" },
     ];
 
     return (

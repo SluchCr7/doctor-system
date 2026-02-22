@@ -1,79 +1,82 @@
 "use client";
 import React from "react";
-import { FiSave, FiUpload } from "react-icons/fi";
 import { clinicDoctor } from "@/data/mockData";
+import { Button } from "@/components/ui/Button";
+import { FiGlobe, FiMapPin, FiMail, FiPhone } from "react-icons/fi";
 
-const ClinicSettings = () => {
+const ClinicInfoSettings = () => {
     return (
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-6">
-                <div>
-                    <h3 className="text-xl font-bold text-slate-800">Clinic Profile</h3>
-                    <p className="text-sm text-slate-500 mt-0.5">Update your clinic's public-facing information.</p>
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all">
-                    <FiSave className="w-4 h-4" /> Save Changes
-                </button>
-            </div>
+        <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-800 mb-8 border-b border-slate-50 pb-4">Clinic Information</h3>
 
-            {/* Clinic Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Clinic / Practice Name</label>
-                    <input
-                        type="text"
-                        defaultValue="Alexander Hayes Medical Practice"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Official Email</label>
-                    <input
-                        type="email"
-                        defaultValue={clinicDoctor.email}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Phone Number</label>
-                    <input
-                        type="text"
-                        defaultValue={clinicDoctor.phone}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Medical License No.</label>
-                    <input
-                        type="text"
-                        defaultValue={clinicDoctor.licenseNumber}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                </div>
-                <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Clinic Address</label>
-                    <textarea
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                        rows={2}
-                        defaultValue={clinicDoctor.address}
-                    />
-                </div>
-            </div>
-
-            {/* Clinic Logo */}
-            <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Clinic Logo</label>
-                <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-slate-200 shrink-0">
-                        <img src={clinicDoctor.image} alt="Clinic Logo" className="w-full h-full object-cover" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Clinic Name</label>
+                            <input
+                                type="text"
+                                defaultValue="Alexander Hayes Memorial Clinic"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Official Website</label>
+                            <div className="relative">
+                                <FiGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    defaultValue="www.alexanderclinic.com"
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Physical Address</label>
+                            <div className="relative">
+                                <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    defaultValue={clinicDoctor.address}
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-all">
-                        <FiUpload className="w-4 h-4" /> Upload New Logo
-                    </button>
+
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Primary Contact Email</label>
+                            <div className="relative">
+                                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="email"
+                                    defaultValue="contact@alexanderclinic.com"
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Phone Number</label>
+                            <div className="relative">
+                                <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    defaultValue={clinicDoctor.phone}
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-10 pt-8 border-t border-slate-100 flex justify-end gap-4">
+                    <Button variant="outline">Reset Changes</Button>
+                    <Button>Save Settings</Button>
                 </div>
             </div>
         </div>
     );
 };
 
-export default ClinicSettings;
+export default ClinicInfoSettings;

@@ -1,6 +1,16 @@
 "use client";
 import React from "react";
-import { HiOutlineUsers, HiOutlineCalendar, HiOutlineCurrencyDollar, HiOutlineArrowTrendingUp, HiOutlineClock, HiOutlinePlus, HiOutlineArrowRight, HiOutlineCheckCircle } from "react-icons/hi2";
+import {
+  HiOutlineUsers,
+  HiOutlineCalendar,
+  HiOutlineCurrencyDollar,
+  HiOutlineArrowTrendingUp,
+  HiOutlineClock,
+  HiOutlinePlus,
+  HiOutlineArrowRight,
+  HiOutlineCheckCircle,
+  HiOutlineMagnifyingGlass
+} from "react-icons/hi2";
 import { FiActivity } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -60,15 +70,25 @@ export default function Dashboard() {
         title="Dashboard Overview"
         subtitle={`Welcome back, ${clinicDoctor.name}. Here's what's happening today.`}
         action={
-          <div className="flex gap-3">
-            <Button variant="outline" size="sm" leftIcon={<HiOutlineClock className="w-4 h-4" />}>
-              Last 30 Days
-            </Button>
-            <Link href="/appointments">
-              <Button size="sm" leftIcon={<HiOutlinePlus className="w-4 h-4" />}>
-                New Appointment
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <div className="relative group min-w-[300px]">
+              <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+              <input
+                type="text"
+                placeholder="Search patients, appointments..."
+                className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" size="sm" leftIcon={<HiOutlineClock className="w-4 h-4" />}>
+                Last 30 Days
               </Button>
-            </Link>
+              <Link href="/appointments">
+                <Button size="sm" leftIcon={<HiOutlinePlus className="w-4 h-4" />}>
+                  New Appointment
+                </Button>
+              </Link>
+            </div>
           </div>
         }
       />
@@ -129,7 +149,7 @@ export default function Dashboard() {
                 <span className="font-bold text-amber-500">★ {clinicDoctor.rating}/5</span>
               </div>
             </div>
-            <Link href="/settings/account">
+            <Link href="/settings/doctor">
               <Button variant="outline" size="sm" className="w-full mt-4">
                 Edit Profile
               </Button>
@@ -207,16 +227,16 @@ export default function Dashboard() {
               desc: "Generate a billing invoice",
             },
             {
-              href: "/medical-records",
+              href: "/reports",
               color: "rose",
               icon: <HiOutlineCheckCircle className="w-6 h-6" />,
-              title: "Add Record",
-              desc: "Create a medical record",
+              title: "Annual Report",
+              desc: "View latest clinic stats",
             },
           ].map((action) => (
             <Link key={action.href} href={action.href}>
-              <div className={`p-5 bg-${action.color}-50/60 rounded-2xl border border-${action.color}-100 hover:border-${action.color}-200 hover:shadow-sm transition-all cursor-pointer group`}>
-                <div className={`w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-${action.color}-600 mb-3.5 group-hover:scale-110 transition-transform`}>
+              <div className={`p-5 bg-white rounded-2xl border border-slate-100 hover:border-primary/20 hover:shadow-md transition-all cursor-pointer group`}>
+                <div className={`w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-primary mb-3.5 group-hover:scale-110 transition-transform`}>
                   {action.icon}
                 </div>
                 <h4 className="font-semibold text-slate-800 text-sm mb-0.5">{action.title}</h4>

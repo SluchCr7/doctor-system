@@ -45,35 +45,7 @@ const menuItems = [
         ],
     },
     {
-        title: "Medical Records",
-        path: "/medical-records",
-        icon: <HiOutlineClipboardDocumentList className="w-5 h-5" />,
-        submenu: [
-            { title: "All Records", path: "/medical-records" },
-            { title: "Create Record", path: "/medical-records/create" },
-        ],
-    },
-    {
-        title: "Prescriptions",
-        path: "/prescriptions",
-        icon: <HiOutlineDocumentText className="w-5 h-5" />,
-        submenu: [
-            { title: "Prescription History", path: "/prescriptions" },
-            { title: "Create Prescription", path: "/prescriptions/create" },
-        ],
-    },
-    {
-        title: "Laboratory",
-        path: "/laboratory",
-        icon: <HiOutlineBeaker className="w-5 h-5" />,
-    },
-    {
-        title: "Doctor Profile",
-        path: "/doctors",
-        icon: <HiOutlineUserCircle className="w-5 h-5" />,
-    },
-    {
-        title: "Billing",
+        title: "Billing & Payments",
         path: "/billing",
         icon: <HiOutlineCurrencyDollar className="w-5 h-5" />,
         submenu: [
@@ -87,9 +59,9 @@ const menuItems = [
         path: "/reports",
         icon: <HiOutlineChartBar className="w-5 h-5" />,
         submenu: [
-            { title: "Revenue Report", path: "/reports/revenue" },
-            { title: "Appointment Report", path: "/reports/appointments" },
-            { title: "Patient Analytics", path: "/reports/analytics" },
+            { title: "Revenue Summary", path: "/reports/revenue" },
+            { title: "Appointment Stats", path: "/reports/appointments" },
+            { title: "Patient Growth", path: "/reports/growth" },
         ],
     },
     {
@@ -97,11 +69,11 @@ const menuItems = [
         path: "/settings",
         icon: <HiOutlineCog6Tooth className="w-5 h-5" />,
         submenu: [
-            { title: "Clinic Info", path: "/settings/clinic" },
+            { title: "Doctor Profile", path: "/settings/doctor" },
+            { title: "Clinic Information", path: "/settings/clinic" },
             { title: "Working Hours", path: "/settings/hours" },
-            { title: "Notifications", path: "/settings/notifications" },
-            { title: "Security", path: "/settings/security" },
-            { title: "Account", path: "/settings/account" },
+            { title: "User Roles", path: "/settings/roles" },
+            { title: "Data Backup", path: "/settings/backup" },
         ],
     },
 ];
