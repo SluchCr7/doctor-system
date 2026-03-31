@@ -10,6 +10,7 @@ interface User {
   name: string;
   email: string;
   role: 'patient' | 'doctor' | 'admin';
+  profileImage?: string;
   profileData?: any;
 }
 
@@ -20,6 +21,8 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  updateProfile: (data: any) => Promise<void>;
+  uploadProfileImage: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,12 +58,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(response.data.user);
         toast.success(`Welcome back, ${response.data.user.name}!`);
 
-        // Redirect based on role
-        if (response.data.user.role === 'doctor') {
-          router.push('/doctor/dashboard');
-        } else {
-          router.push('/patient/dashboard');
-        }
+        // Redirect to dashboard
+        router.push('/');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed');
@@ -78,14 +77,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(response.data.user);
         toast.success('Registration successful!');
 
-        if (response.data.user.role === 'doctor') {
-          router.push('/doctor/dashboard');
-        } else {
-          router.push('/patient/dashboard');
-        }
+        // Redirect to dashboard (role-specific view handled there)
+        router.push('/');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (data: any) => {
+    try {
+      setLoading(true);
+      const endpoint = user?.role === 'doctor' ? '/doctor/profile' : '/patient/profile';
+      const response = await api.put(endpoint, data);
+      if (response.data.success) {
+        setUser(response.data.data);
+        toast.success('Profile updated successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Update failed');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uploadProfileImage = async (file: File) => {
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await api.post('/auth/profile-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      if (response.data.success) {
+        setUser(response.data.data);
+        toast.success(response.data.message || 'Profile image updated!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Image upload failed');
       throw error;
     } finally {
       setLoading(false);
@@ -104,7 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, updateProfile, uploadProfileImage }}>
       {children}
     </AuthContext.Provider>
   );

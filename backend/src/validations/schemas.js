@@ -43,11 +43,33 @@ const appointmentValidations = {
 const profileValidations = {
   updatePatient: Joi.object({
     name: Joi.string().min(2).max(50).trim(),
+    profileImage: Joi.string().uri().allow('', null),
     profileData: Joi.object({
-      phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/),
-      address: Joi.string().max(200),
+      phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
+      address: Joi.string().max(200).allow('', null),
       age: Joi.number().min(0).max(120),
+      bloodType: Joi.string().max(10).allow('', null),
       gender: Joi.string().valid('male', 'female', 'other')
+    })
+  }).min(1),
+
+  updateDoctor: Joi.object({
+    name: Joi.string().min(2).max(50).trim(),
+    profileImage: Joi.string().uri().allow('', null),
+    profileData: Joi.object({
+      phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
+      address: Joi.string().max(200).allow('', null),
+      gender: Joi.string().valid('male', 'female', 'other'),
+      // Professional
+      specialization: Joi.string().max(100).allow('', null),
+      qualifications: Joi.string().max(200).allow('', null),
+      experience: Joi.number().min(0).max(60),
+      bio: Joi.string().max(1000).allow('', null),
+      languages: Joi.array().items(Joi.string().max(50)),
+      // Clinic details
+      clinicName: Joi.string().max(200).allow('', null),
+      clinicAddress: Joi.string().max(300).allow('', null),
+      consultationFee: Joi.number().min(0)
     })
   }).min(1),
 

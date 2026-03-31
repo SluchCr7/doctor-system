@@ -82,14 +82,14 @@ const Topbar = () => {
                 <p className="font-bold text-slate-900 truncate">{user.email}</p>
               </div>
               
-              <Link href="/settings/profile" className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors">
+              <Link href="/settings" className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors">
                 <HiOutlineCog6Tooth size={18} />
-                Clinic Settings
+                System Settings
               </Link>
               
-              <Link href="/profile" className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors">
+              <Link href="/settings/personal" className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors">
                 <HiOutlineUser size={18} />
-                Medical Profile
+                Profile Settings
               </Link>
 
               <div className="mt-3 pt-3 border-t border-slate-50">

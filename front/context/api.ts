@@ -19,7 +19,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         // Try to refresh token
-        await axios.post('http://localhost:5000/api/auth/refresh-token', {}, { withCredentials: true });
+        await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {}, { withCredentials: true });
         return api(originalRequest);
       } catch (refreshError) {
         // Redirect to login or clear state

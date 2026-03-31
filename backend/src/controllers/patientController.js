@@ -17,17 +17,26 @@ exports.getPatientProfile = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/patient/profile
 // @access  Private/Patient
 exports.updatePatientProfile = asyncHandler(async (req, res, next) => {
-  const { name, email, profileData } = req.body;
+  const { name, profileData, profileImage } = req.body;
 
-  const updateFields = {};
-  if (name) updateFields.name = name;
-  if (email) updateFields.email = email;
-  if (profileData) updateFields.profileData = profileData;
+  // Build $set payload using dot-notation so only sent fields are updated
+  const setFields = {};
+  if (name) setFields.name = name;
+  if (profileImage !== undefined) setFields.profileImage = profileImage;
 
-  const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
-    new: true,
-    runValidators: true
-  });
+  if (profileData && typeof profileData === 'object') {
+    for (const [key, value] of Object.entries(profileData)) {
+      if (value !== undefined) {
+        setFields[`profileData.${key}`] = value;
+      }
+    }
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { $set: setFields },
+    { new: true, runValidators: true }
+  );
 
   res.status(200).json({
     success: true,

@@ -73,7 +73,7 @@ const PatientsPage = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-5">
             <PageHeader
                 title="Patients"
                 subtitle="Manage and view all your clinic's patient records."

@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../utils/tokenUtils');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
@@ -19,8 +19,8 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify token using utility
+    const decoded = verifyToken(token);
 
     req.user = await User.findById(decoded.id);
 

@@ -5,7 +5,7 @@ import { FiPieChart } from "react-icons/fi";
 
 const RevenueReport = () => {
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-800">Revenue Analytics</h1>
                 <select className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium">

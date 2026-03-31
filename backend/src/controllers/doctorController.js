@@ -3,6 +3,48 @@ const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const DoctorAvailability = require('../models/DoctorAvailability');
 
+// @desc    Get doctor profile
+// @route   GET /api/doctor/profile
+// @access  Private/Doctor
+exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
+  const profile = await User.findById(req.user.id);
+  res.status(200).json({
+    success: true,
+    data: profile
+  });
+});
+
+// @desc    Update doctor profile
+// @route   PUT /api/doctor/profile
+// @access  Private/Doctor
+exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
+  const { name, profileData, profileImage } = req.body;
+
+  // Build $set payload using dot-notation so only sent fields are updated
+  const setFields = {};
+  if (name) setFields.name = name;
+  if (profileImage !== undefined) setFields.profileImage = profileImage;
+
+  if (profileData && typeof profileData === 'object') {
+    for (const [key, value] of Object.entries(profileData)) {
+      if (value !== undefined) {
+        setFields[`profileData.${key}`] = value;
+      }
+    }
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { $set: setFields },
+    { new: true, runValidators: true }
+  );
+
+  res.status(200).json({
+    success: true,
+    data: user
+  });
+});
+
 // @desc    Get doctor dashboard statistics
 // @route   GET /api/doctor/dashboard
 // @access  Private/Doctor

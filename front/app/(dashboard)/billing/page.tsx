@@ -42,7 +42,7 @@ const BillingPage = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 px-5 py-5">
             <PageHeader
                 title="Billing & Invoices"
                 subtitle="Manage patient billing, payments, and financial records."

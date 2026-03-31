@@ -30,7 +30,7 @@ const PatientProfilePage = () => {
     const tabs = ["Information", "Medical History", "Prescriptions", "Billing", "Files & Results"];
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Back and Header */}
             <div className="flex items-center gap-4">
                 <button

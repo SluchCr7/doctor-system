@@ -70,7 +70,7 @@ export default function PatientDashboard({ user }: { user: any }) {
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">Hello, {user.name.split(' ')[0]}!</h1>
           <p className="mt-4 text-sky-50/80 text-lg font-medium leading-relaxed">Your health is our priority. You have <span className="text-white font-bold underline decoration-sky-300 underline-offset-4">{data?.upcoming?.length || 0} upcoming sessions</span> this week.</p>
           <Link href="/appointments">
-            <Button size="lg" className="mt-8 bg-white text-primary hover:bg-sky-50 font-bold px-8 rounded-2xl shadow-lg border-0">
+            <Button size="lg" variant='secondary' className="mt-8  text-black hover:bg-red-400 font-bold px-8 rounded-2xl shadow-lg border-0">
               Schedule New Visit
             </Button>
           </Link>
@@ -102,9 +102,9 @@ export default function PatientDashboard({ user }: { user: any }) {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">
-                  <Button 
+                  <Button
                     className="rounded-2xl font-bold px-6"
-                    onClick={() => openModal('RESCHEDULE_APPOINTMENT', { 
+                    onClick={() => openModal('RESCHEDULE_APPOINTMENT', {
                       initialData: data.upcoming[0],
                       onSuccess: () => {
                         api.get('/patient/dashboard').then(res => setData(res.data.data));
@@ -113,8 +113,8 @@ export default function PatientDashboard({ user }: { user: any }) {
                   >
                     Reschedule
                   </Button>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="text-red-500 hover:bg-red-50 rounded-2xl font-bold"
                     onClick={() => handleCancelAppointment(data.upcoming[0]._id)}
                   >

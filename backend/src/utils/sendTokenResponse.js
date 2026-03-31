@@ -1,12 +1,14 @@
+const { getSignedJwtToken, getSignedRefreshToken } = require('./tokenUtils');
+
 // Get token from model, create cookie and send response
-const sendTokenResponse = (user, statusCode, res) => {
+const sendTokenResponse = async (user, statusCode, res) => {
   // Create token
-  const token = user.getSignedJwtToken();
-  const refreshToken = user.getSignedRefreshToken();
+  const token = getSignedJwtToken(user._id, user.role);
+  const refreshToken = getSignedRefreshToken(user._id);
 
   // Save refresh token to user
   user.refreshToken = refreshToken;
-  user.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
 
   const options = {
     expires: new Date(
@@ -28,7 +30,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        profileImage: user.profileImage
       }
     });
 };
