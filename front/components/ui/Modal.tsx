@@ -5,8 +5,8 @@ import { HiXMark } from "react-icons/hi2";
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    title?: string;
-    description?: string;
+    title?: React.ReactNode;
+    description?: React.ReactNode;
     children: React.ReactNode;
     footer?: React.ReactNode;
     size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl" | "full";

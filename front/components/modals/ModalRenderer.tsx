@@ -61,10 +61,7 @@ export const ModalRenderer = () => {
                     isOpen={isOpen}
                     onClose={closeModal}
                     initialData={modalType === "RESCHEDULE_APPOINTMENT" ? (modalProps as any).initialData : undefined}
-                    onSubmit={(data: any) => {
-                        console.log("Appointment submitted:", data);
-                        closeModal();
-                    }}
+                    onSuccess={(modalProps as any)?.onSuccess}
                 />
             );
 

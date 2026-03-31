@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "success";
     size?: "sm" | "md" | "lg";
     isLoading?: boolean;
     leftIcon?: React.ReactNode;
@@ -19,6 +19,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             outline: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-primary focus:ring-slate-200",
             ghost: "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900",
             danger: "bg-red-50 text-red-600 hover:bg-red-100 focus:ring-red-500",
+            success: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:ring-emerald-500",
         };
 
         const sizes = {

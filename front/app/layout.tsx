@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ModalProvider } from "@/context/ModalContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { ModalRenderer } from "@/components/modals/ModalRenderer";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,10 +24,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased text-slate-800 bg-slate-50`}>
-        <ModalProvider>
-          {children}
-          <ModalRenderer />
-        </ModalProvider>
+        <AuthProvider>
+          <ModalProvider>
+            {children}
+            <ModalRenderer />
+            <Toaster position="top-right" />
+          </ModalProvider>
+        </AuthProvider>
       </body>
     </html>
   );

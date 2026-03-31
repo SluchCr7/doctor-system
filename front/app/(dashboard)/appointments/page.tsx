@@ -1,273 +1,246 @@
-"use client";
-import React from "react";
-import {
-    HiOutlineClock,
-    HiCheckCircle,
-    HiXCircle,
-    HiOutlinePlus,
-    HiChevronLeft,
-    HiChevronRight,
-    HiOutlineFunnel,
-    HiOutlineArrowPath,
-} from "react-icons/hi2";
-import { appointments } from "@/data/mockData";
-import { useModal } from "@/context/ModalContext";
-import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { Select } from "@/components/ui/Select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+'use client';
 
-// ── Status Badge Variant Map ──────────────────────────────────────────────────
+import React, { useEffect, useState } from 'react';
+import { 
+  HiOutlineClock, 
+  HiCheckCircle, 
+  HiXCircle, 
+  HiOutlinePlus, 
+  HiOutlineCalendar,
+  HiChevronLeft, 
+  HiChevronRight, 
+  HiOutlineFunnel, 
+  HiOutlineArrowPath 
+} from 'react-icons/hi2';
+import api from '@/context/api';
+import { useAuth } from '@/context/AuthContext';
+import { useModal } from '@/context/ModalContext';
+import { PageHeader } from '@/components/PageHeader';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Select } from '@/components/ui/Select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import toast from 'react-hot-toast';
+
 const statusVariant: Record<string, "success" | "warning" | "error" | "info"> = {
-    Confirmed: "success",
-    Pending: "warning",
-    Completed: "info",
-    Cancelled: "error",
+  confirmed: "success",
+  pending: "warning",
+  completed: "info",
+  cancelled: "error",
 };
 
-// ── Month/Day Extraction ──────────────────────────────────────────────────────
 const getDateParts = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return {
-        month: d.toLocaleString("en", { month: "short" }).toUpperCase(),
-        day: d.getDate(),
-    };
+  const d = new Date(dateStr);
+  return {
+    month: d.toLocaleString("en", { month: "short" }).toUpperCase(),
+    day: d.getDate(),
+  };
 };
 
 const AppointmentsPage = () => {
-    const { openModal } = useModal();
+  const { user } = useAuth();
+  const { openModal } = useModal();
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const handleBook = () => {
-        openModal("ADD_APPOINTMENT");
-    };
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/appointments');
+      if (res.data.success) {
+        setAppointments(res.data.data);
+      }
+    } catch (err) {
+      toast.error('Failed to load appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleReschedule = (appt: typeof appointments[0]) => {
-        openModal("RESCHEDULE_APPOINTMENT", {
-            initialData: {
-                patientName: appt.patientName,
-                date: appt.date,
-                time: appt.time.replace(" AM", "").replace(" PM", ""),
-                notes: appt.reason,
-            },
-        });
-    };
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
 
-    const handleConfirm = (appt: typeof appointments[0]) => {
-        openModal("DELETE_CONFIRMATION", {
-            title: "Confirm Appointment",
-            description: `Confirm the appointment for ${appt.patientName} on ${appt.date} at ${appt.time}?`,
-            onConfirm: () => console.log("Confirmed:", appt.id),
-        });
-    };
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      const res = await api.patch(`/appointments/${id}`, { status });
+      if (res.data.success) {
+        toast.success(`Appointment marked as ${status}`);
+        fetchAppointments();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Update failed');
+    }
+  };
 
-    const handleCancel = (appt: typeof appointments[0]) => {
-        openModal("DELETE_CONFIRMATION", {
-            title: "Cancel Appointment",
-            description: `Are you sure you want to cancel ${appt.patientName}'s appointment? This action will notify the patient.`,
-            onConfirm: () => console.log("Cancelled:", appt.id),
-        });
-    };
+  const handleBook = () => {
+    openModal("ADD_APPOINTMENT", { onSuccess: fetchAppointments });
+  };
 
-    return (
-        <div className="space-y-6">
-            <PageHeader
-                title="Appointments"
-                subtitle="Manage patient bookings and the clinic schedule."
-                breadcrumbs={[
-                    { label: "Dashboard", href: "/" },
-                    { label: "Appointments", href: "/appointments" },
-                ]}
-                action={
-                    <Button
-                        leftIcon={<HiOutlinePlus className="w-5 h-5" />}
-                        onClick={handleBook}
-                    >
-                        Book Appointment
-                    </Button>
-                }
-            />
+  if (loading) return <div className="p-8 animate-pulse space-y-4">
+    <div className="h-20 bg-slate-100 rounded-2xl" />
+    <div className="h-64 bg-slate-100 rounded-2xl" />
+  </div>;
 
-            <Tabs defaultValue="list" className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <TabsList>
-                        <TabsTrigger value="list">List View</TabsTrigger>
-                        <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-                    </TabsList>
-                </div>
+  return (
+    <div className="space-y-8 p-6 lg:p-10 max-w-[1400px] mx-auto">
+      <PageHeader
+        title="Appointment Hub"
+        subtitle={user?.role === 'doctor' ? "Track and manage your patient sessions." : "Manage your upcoming clinic visits."}
+        action={
+          user?.role === 'patient' && (
+            <Button
+              className="rounded-2xl shadow-xl shadow-primary/20"
+              leftIcon={<HiOutlinePlus size={20} />}
+              onClick={handleBook}
+            >
+              Book New Session
+            </Button>
+          )
+        }
+      />
 
-                {/* ── List View ─────────────────────────────────────────────── */}
-                <TabsContent value="list" className="space-y-4">
-                    {/* Filters */}
-                    <Card>
-                        <CardContent className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
-                            <div className="flex gap-4 w-full md:w-auto">
-                                <Select
-                                    options={[
-                                        { label: "All Appointments", value: "all" },
-                                        { label: "Confirmed", value: "Confirmed" },
-                                        { label: "Pending", value: "Pending" },
-                                        { label: "Completed", value: "Completed" },
-                                        { label: "Cancelled", value: "Cancelled" },
-                                    ]}
-                                    className="min-w-[180px]"
-                                />
-                                <Select
-                                    options={[
-                                        { label: "All Visit Types", value: "all" },
-                                        { label: "General Consultation", value: "General Consultation" },
-                                        { label: "Follow-up", value: "Follow-up" },
-                                        { label: "Emergency", value: "Emergency" },
-                                    ]}
-                                    className="min-w-[180px]"
-                                />
-                            </div>
-                            <Button variant="ghost" leftIcon={<HiOutlineFunnel className="w-4 h-4" />}>
-                                Clear Filters
+      <Tabs defaultValue="list" className="space-y-8">
+        <TabsList className="bg-slate-100/50 p-1 rounded-2xl border border-slate-100">
+          <TabsTrigger value="list" className="rounded-xl px-6 font-bold tracking-tight">List Directory</TabsTrigger>
+          <TabsTrigger value="calendar" className="rounded-xl px-6 font-bold tracking-tight">Interactive Calendar</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            {appointments.length > 0 ? (
+              appointments.map((appt) => {
+                const { month, day } = getDateParts(appt.date);
+                const isDoctor = user?.role === 'doctor';
+                const otherParty = isDoctor ? appt.patientId : appt.doctorId;
+
+                return (
+                  <Card key={appt._id} className="border-0 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden group">
+                    <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                      <div className="flex items-center gap-8">
+                        {/* Date Badge */}
+                        <div className="flex flex-col items-center justify-center w-20 h-20 bg-slate-50 rounded-3xl text-slate-800 border-2 border-white shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-500 shrink-0">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">{month}</span>
+                          <span className="text-2xl font-black">{day}</span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                            <HiOutlineClock size={16} />
+                            {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          <h3 className="text-xl font-black text-slate-900 leading-tight">
+                            {otherParty?.name || 'Unknown'}
+                          </h3>
+                          <div className="flex items-center gap-3">
+                            <p className="text-slate-400 text-sm font-medium italic">{appt.notes || "Standard General Consultation"}</p>
+                            <Badge variant={statusVariant[appt.status.toLowerCase()] || "info"} className="rounded-lg font-black uppercase text-[10px] tracking-widest px-3 py-1">
+                              {appt.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Role-Based Actions */}
+                      <div className="flex items-center gap-3">
+                        {isDoctor && appt.status === 'pending' && (
+                          <>
+                            <Button 
+                              variant="success" 
+                              className="rounded-2xl font-bold px-6 border-0 shadow-lg shadow-emerald-100"
+                              onClick={() => handleUpdateStatus(appt._id, 'confirmed')}
+                            >
+                              Approve
                             </Button>
-                        </CardContent>
-                    </Card>
+                            <Button 
+                              variant="outline" 
+                              className="rounded-2xl font-bold px-6 text-rose-500 border-rose-100 hover:bg-rose-50"
+                              onClick={() => handleUpdateStatus(appt._id, 'cancelled')}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        
+                        {!isDoctor && appt.status === 'pending' && (
+                          <Button 
+                            variant="ghost" 
+                            className="text-slate-400 hover:text-rose-500 font-bold"
+                            onClick={() => handleUpdateStatus(appt._id, 'cancelled')}
+                          >
+                            Cancel Request
+                          </Button>
+                        )}
 
-                    {/* Appointment Cards */}
-                    <div className="space-y-4">
-                        {appointments.map((appt) => {
-                            const { month, day } = getDateParts(appt.date);
-                            return (
-                                <Card key={appt.id} className="hover:border-primary/20 transition-colors group">
-                                    <CardContent className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                        {/* Left: Date + Info */}
-                                        <div className="flex items-center gap-6">
-                                            <div className="flex flex-col items-center justify-center w-16 h-16 bg-sky-50 rounded-2xl text-sky-600 border border-sky-100 group-hover:bg-sky-600 group-hover:text-white transition-all duration-300 shrink-0">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5">{month}</span>
-                                                <span className="text-xl font-bold">{day}</span>
-                                            </div>
+                        <button className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary transition-all group/btn">
+                          <HiOutlineArrowPath className="group-hover/btn:rotate-180 transition-transform duration-500" />
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
+                  <HiOutlineCalendar size={40} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900">No appointments found</h3>
+                <p className="text-slate-400 font-medium mt-2">Your scheduled sessions will appear here.</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
-                                            <div className="h-10 w-px bg-slate-200 hidden md:block" />
+        <TabsContent value="calendar">
+          <Card className="rounded-[2.5rem] border-0 shadow-2xl shadow-slate-100/50 overflow-hidden">
+            <CardContent className="p-10">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
+                <div className="flex items-center gap-6">
+                  <Button variant="ghost" className="w-12 h-12 rounded-2xl bg-slate-50"><HiChevronLeft size={24} /></Button>
+                  <h3 className="text-3xl font-black text-slate-900 tracking-tight">March 2026</h3>
+                  <Button variant="ghost" className="w-12 h-12 rounded-2xl bg-slate-50"><HiChevronRight size={24} /></Button>
+                </div>
+                <div className="flex gap-4">
+                  <Badge className="bg-primary/10 text-primary border-0 font-bold px-4 py-2">Upcoming: {appointments.length}</Badge>
+                </div>
+              </div>
 
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1 text-slate-500 text-sm font-medium">
-                                                    <HiOutlineClock className="w-4 h-4 text-primary" />
-                                                    {appt.time}
-                                                </div>
-                                                <h3 className="text-base font-bold text-slate-800">{appt.patientName}</h3>
-                                                <p className="text-sm text-slate-500">
-                                                    {appt.reason}
-                                                    {appt.notes && (
-                                                        <span className="text-slate-400"> — {appt.notes}</span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Right: Status + Actions */}
-                                        <div className="flex items-center gap-4 justify-between md:justify-end w-full md:w-auto mt-4 md:mt-0">
-                                            <Badge variant={statusVariant[appt.status] ?? "info"}>
-                                                {appt.status}
-                                            </Badge>
-
-                                            <div className="flex items-center gap-1.5">
-                                                {/* Reschedule */}
-                                                <button
-                                                    title="Reschedule"
-                                                    onClick={() => handleReschedule(appt)}
-                                                    className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-sky-600 hover:border-sky-200 hover:bg-sky-50 transition-all"
-                                                >
-                                                    <HiOutlineArrowPath className="w-4 h-4" />
-                                                </button>
-                                                {/* Confirm */}
-                                                {appt.status === "Pending" && (
-                                                    <button
-                                                        title="Confirm Appointment"
-                                                        onClick={() => handleConfirm(appt)}
-                                                        className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all"
-                                                    >
-                                                        <HiCheckCircle className="w-5 h-5" />
-                                                    </button>
-                                                )}
-                                                {/* Cancel */}
-                                                {appt.status !== "Completed" && appt.status !== "Cancelled" && (
-                                                    <button
-                                                        title="Cancel Appointment"
-                                                        onClick={() => handleCancel(appt)}
-                                                        className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all"
-                                                    >
-                                                        <HiXCircle className="w-5 h-5" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
+              <div className="grid grid-cols-7 gap-6">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+                  <div key={day} className="text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
+                    {day}
+                  </div>
+                ))}
+                {Array.from({ length: 31 }).map((_, i) => {
+                  const dayNum = i + 1;
+                  const dayAppts = appointments.filter(a => new Date(a.date).getDate() === dayNum);
+                  
+                  return (
+                    <div key={i} className="min-h-[140px] bg-white rounded-3xl p-4 border border-slate-50 hover:border-primary/20 hover:shadow-xl transition-all duration-500 cursor-pointer group relative overflow-hidden">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className={`text-lg font-black ${dayAppts.length > 0 ? 'text-primary' : 'text-slate-300'}`}>
+                          {dayNum}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {dayAppts.slice(0, 2).map((a, idx) => (
+                          <div key={idx} className="px-3 py-1.5 bg-primary/5 border border-primary/10 text-primary text-[10px] font-black rounded-xl truncate">
+                            {user?.role === 'doctor' ? a.patientId.name.split(' ')[0] : a.doctorId.name.split(' ')[0]}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                </TabsContent>
-
-                {/* ── Calendar View ──────────────────────────────────────────── */}
-                <TabsContent value="calendar">
-                    <Card>
-                        <CardContent>
-                            <div className="flex justify-between items-center mb-6">
-                                <div className="flex items-center gap-4">
-                                    <Button variant="ghost" size="sm"><HiChevronLeft className="w-5 h-5" /></Button>
-                                    <h3 className="text-lg font-bold text-slate-800">February 2026</h3>
-                                    <Button variant="ghost" size="sm"><HiChevronRight className="w-5 h-5" /></Button>
-                                </div>
-                                <Button
-                                    size="sm"
-                                    leftIcon={<HiOutlinePlus className="w-4 h-4" />}
-                                    onClick={handleBook}
-                                >
-                                    New Booking
-                                </Button>
-                            </div>
-
-                            <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200">
-                                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                                    <div key={day} className="bg-slate-50 p-2 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                        {day}
-                                    </div>
-                                ))}
-                                {Array.from({ length: 35 }).map((_, i) => {
-                                    const day = i - 3;
-                                    const isCurrentMonth = day > 0 && day <= 28;
-                                    const hasAppt = isCurrentMonth && [20, 21, 22].includes(day);
-                                    const isToday = day === 20;
-
-                                    return (
-                                        <div
-                                            key={i}
-                                            className={`min-h-[90px] bg-white p-2 transition-colors hover:bg-slate-50 cursor-pointer ${!isCurrentMonth && "bg-slate-50/50 opacity-40"}`}
-                                            onClick={() => isCurrentMonth && handleBook()}
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-primary text-white font-bold" : "text-slate-600"}`}>
-                                                    {isCurrentMonth ? day : ""}
-                                                </span>
-                                            </div>
-                                            {hasAppt && (
-                                                <div className="mt-1 space-y-1">
-                                                    {appointments
-                                                        .filter(a => new Date(a.date).getDate() === day)
-                                                        .slice(0, 2)
-                                                        .map(a => (
-                                                            <div key={a.id} className="px-1.5 py-0.5 bg-sky-50 border border-sky-100 text-sky-700 text-[10px] font-medium rounded truncate">
-                                                                {a.patientName.split(" ")[0]}
-                                                            </div>
-                                                        ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 };
 
 export default AppointmentsPage;
