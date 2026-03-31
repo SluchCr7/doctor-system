@@ -127,7 +127,7 @@ export default function PersonalInfoSettings() {
     try {
       const payload: any = {
         name: formData.name,
-        profileImage: formData.profileImage || undefined,
+        profileImage: (formData.profileImage && !formData.profileImage.startsWith('data:image')) ? formData.profileImage : undefined,
         profileData: {
           phone: formData.profileData.phone || undefined,
           address: formData.profileData.address || undefined,

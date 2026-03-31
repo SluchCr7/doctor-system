@@ -111,11 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await api.post('/auth/profile-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/auth/profile-image', formData);
       if (response.data.success) {
         setUser(response.data.data);
         toast.success(response.data.message || 'Profile image updated!');
