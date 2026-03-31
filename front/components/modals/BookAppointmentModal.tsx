@@ -22,10 +22,10 @@ const BookAppointmentModal = ({ isOpen, onClose, onSuccess, initialData }: BookA
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    doctorId: '',
-    date: '',
-    time: '',
-    notes: '',
+    doctorId: initialData?.doctorId?._id || '',
+    date: initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : '',
+    time: initialData?.date ? new Date(initialData.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
+    notes: initialData?.notes || '',
   });
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSuccess, initialData }: BookA
           const res = await api.get('/patient/doctors');
           if (res.data.success) {
             setDoctors(res.data.data);
-            if (res.data.data.length > 0) {
+            if (res.data.data.length > 0 && !formData.doctorId) {
               setFormData(prev => ({ ...prev, doctorId: res.data.data[0]._id }));
             }
           }
@@ -45,20 +45,30 @@ const BookAppointmentModal = ({ isOpen, onClose, onSuccess, initialData }: BookA
       };
       fetchDoctors();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, formData.doctorId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Combine date and time for backend if needed, or send as is
+      // Combine date and time for backend
       const fullDate = new Date(`${formData.date}T${formData.time}`);
       
-      const res = await api.post('/appointments', {
-        doctorId: formData.doctorId,
-        date: fullDate,
-        notes: formData.notes
-      });
+      let res;
+      if (initialData?._id) {
+        // Reschedule
+        res = await api.patch(`/appointments/${initialData._id}`, {
+          date: fullDate,
+          notes: formData.notes
+        });
+      } else {
+        // New booking
+        res = await api.post('/appointments', {
+          doctorId: formData.doctorId,
+          date: fullDate,
+          notes: formData.notes
+        });
+      }
 
       if (res.data.success) {
         toast.success('Your appointment request was sent successfully!');
@@ -85,7 +95,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSuccess, initialData }: BookA
           <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
             <HiOutlineSparkles size={20} />
           </div>
-          <span className="font-black text-slate-900">Schedule Session</span>
+          <span className="font-black text-slate-900">{initialData ? 'Update Session' : 'Schedule Session'}</span>
         </div>
       }
       size="lg"

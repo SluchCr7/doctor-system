@@ -4,6 +4,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FiUser, FiPhone, FiMail, FiMapPin, FiCalendar } from "react-icons/fi";
+import api from "@/context/api";
+import toast from "react-hot-toast";
 
 interface PatientModalProps {
     isOpen: boolean;
@@ -15,14 +17,16 @@ interface PatientModalProps {
 
 const AddPatientModal = ({ isOpen, onClose, initialData, isLoading = false, onSubmit }: PatientModalProps) => {
     const isEditMode = !!initialData;
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         fullName: "",
         dateOfBirth: "",
         phone: "",
         email: "",
+        password: "DefaultPassword123!", // For auto-registration
         address: "",
         bloodGroup: "A+",
-        gender: "Male"
+        gender: "male"
     });
 
     useEffect(() => {
@@ -34,7 +38,8 @@ const AddPatientModal = ({ isOpen, onClose, initialData, isLoading = false, onSu
                 email: initialData.email || "",
                 address: initialData.address || "",
                 bloodGroup: initialData.bloodGroup || "A+",
-                gender: initialData.gender || "Male"
+                gender: initialData.gender || "male",
+                password: "DefaultPassword123!"
             });
         } else {
             setFormData({
@@ -44,15 +49,44 @@ const AddPatientModal = ({ isOpen, onClose, initialData, isLoading = false, onSu
                 email: "",
                 address: "",
                 bloodGroup: "A+",
-                gender: "Male"
+                gender: "male",
+                password: "DefaultPassword123!"
             });
         }
     }, [initialData, isOpen]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (onSubmit) {
-            onSubmit(formData);
+        setLoading(true);
+        try {
+            const endpoint = isEditMode ? `/admin/users/${initialData._id}` : '/auth/register';
+            const method = isEditMode ? 'patch' : 'post';
+            
+            const payload = {
+                name: formData.fullName,
+                email: formData.email || `${formData.fullName.toLowerCase().replace(/\s/g, '')}@clinic.local`,
+                password: formData.password,
+                role: 'patient',
+                profileData: {
+                    phone: formData.phone,
+                    address: formData.address,
+                    gender: formData.gender.toLowerCase(),
+                    bloodType: formData.bloodGroup,
+                    // Additional mock data for completeness if needed
+                }
+            };
+
+            const res = await api[method](endpoint, payload);
+
+            if (res.data.success) {
+                toast.success(isEditMode ? 'Patient updated' : 'Patient registered successfully');
+                if (onSubmit) onSubmit(res.data.data);
+                onClose();
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Action failed');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -154,9 +188,9 @@ const AddPatientModal = ({ isOpen, onClose, initialData, isLoading = false, onSu
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
-                    <Button variant="ghost" onClick={onClose} type="button" disabled={isLoading}>Cancel</Button>
-                    <Button type="submit" isLoading={isLoading}>
-                        {isEditMode ? "Update Patient" : "Register Patient"}
+                    <Button variant="ghost" onClick={onClose} type="button" disabled={loading}>Cancel</Button>
+                    <Button type="submit" isLoading={loading}>
+                        {isEditMode ? "Update" : "Confirm Registration"}
                     </Button>
                 </div>
             </form>

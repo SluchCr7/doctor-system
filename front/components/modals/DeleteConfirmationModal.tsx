@@ -1,8 +1,10 @@
 "use client";
+
 import React from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { FiAlertTriangle } from "react-icons/fi";
+import { HiOutlineExclamationTriangle } from "react-icons/hi2";
+import { motion } from "framer-motion";
 
 interface DeleteConfirmationModalProps {
     isOpen: boolean;
@@ -17,37 +19,46 @@ const DeleteConfirmationModal = ({
     isOpen,
     onClose,
     onConfirm,
-    title = "Delete Item",
-    description = "Are you sure you want to delete this item? This action cannot be undone.",
+    title = "Delete Entry",
+    description = "This action is permanent and cannot be undone. Are you sure you wish to proceed?",
     isLoading = false
 }: DeleteConfirmationModalProps) => {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-            <div className="flex flex-col items-center text-center p-4">
-                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                    <FiAlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
-                <p className="text-sm text-slate-500 mb-6 max-w-[280px] mx-auto leading-relaxed">
+        <Modal isOpen={isOpen} onClose={onClose} title="" size="sm">
+            <div className="flex flex-col items-center text-center py-6">
+                <motion.div
+                    initial={{ scale: 0.5, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-lg shadow-red-100/50"
+                >
+                    <HiOutlineExclamationTriangle className="w-10 h-10 text-red-500" />
+                </motion.div>
+                
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3">
+                    {title}
+                </h3>
+                
+                <p className="text-base text-slate-500 font-medium mb-10 max-w-[280px] mx-auto leading-relaxed">
                     {description}
                 </p>
 
-                <div className="flex gap-3 w-full">
+                <div className="flex flex-col gap-3 w-full">
                     <Button
+                        size="lg"
                         variant="ghost"
                         onClick={onClose}
-                        className="flex-1"
+                        className="w-full rounded-2xl font-bold text-slate-400 hover:text-slate-600 h-14"
                         disabled={isLoading}
                     >
-                        Cancel
+                        Keep Entry
                     </Button>
                     <Button
-                        variant="danger"
+                        size="lg"
                         onClick={onConfirm}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                        className="w-full rounded-2xl font-bold bg-red-500 hover:bg-red-600 text-white shadow-xl shadow-red-200/50 h-14"
                         isLoading={isLoading}
                     >
-                        Delete
+                        Yes, Delete Permanently
                     </Button>
                 </div>
             </div>

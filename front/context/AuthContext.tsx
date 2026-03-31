@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.data.success) {
         setUser(response.data.user);
         toast.success(`Welcome back, ${response.data.user.name}!`);
-        
+
         // Redirect based on role
         if (response.data.user.role === 'doctor') {
           router.push('/doctor/dashboard');
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.data.success) {
         setUser(response.data.user);
         toast.success('Registration successful!');
-        
+
         if (response.data.user.role === 'doctor') {
           router.push('/doctor/dashboard');
         } else {

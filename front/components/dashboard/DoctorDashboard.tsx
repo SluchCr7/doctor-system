@@ -8,10 +8,12 @@ import { HiOutlineUsers, HiOutlineCalendar, HiOutlinePlus, HiOutlineMagnifyingGl
 import { FiActivity } from 'react-icons/fi';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { useModal } from '@/context/ModalContext';
 
 export default function DoctorDashboard({ user }: { user: any }) {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { openModal } = useModal();
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -44,11 +46,22 @@ export default function DoctorDashboard({ user }: { user: any }) {
           <p className="text-slate-500 mt-1 font-medium">Manage your clinic and patients seamlessly.</p>
         </div>
         <div className="flex gap-3">
-          <Link href="/appointments">
-            <Button size="lg" className="rounded-2xl shadow-lg shadow-primary/20" leftIcon={<HiOutlinePlus />}>
-              Add Appointment
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            variant="outline" 
+            className="rounded-2xl border-2 border-slate-200"
+            onClick={() => openModal('ADD_PATIENT')}
+          >
+            New Patient
+          </Button>
+          <Button 
+            size="lg" 
+            className="rounded-2xl shadow-lg shadow-primary/20" 
+            leftIcon={<HiOutlinePlus />}
+            onClick={() => openModal('ADD_APPOINTMENT')}
+          >
+            Add Appointment
+          </Button>
         </div>
       </div>
 
@@ -121,39 +134,103 @@ export default function DoctorDashboard({ user }: { user: any }) {
           </CardContent>
         </Card>
 
-        {/* List of today's appointments fetched from real DB */}
-        <Card className="lg:col-span-2 border-slate-100 shadow-sm">
+        {/* Patients List Section */}
+        <Card className="lg:col-span-3 border-slate-100 shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 mx-6 px-0 py-5">
-            <CardTitle className="text-lg">Today's List</CardTitle>
-            <Link href="/appointments">
-              <Button variant="ghost" className="text-primary font-bold text-sm">View Calendar <HiOutlineArrowRight size={16} /></Button>
-            </Link>
+            <div>
+              <CardTitle className="text-xl font-bold text-slate-800">My Patients</CardTitle>
+              <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">Active Directory</p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-xl border-slate-200 text-slate-600 font-bold"
+              onClick={() => openModal('ADD_PATIENT')}
+            >
+              <HiOutlinePlus size={16} className="mr-2" /> Register New
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-slate-50">
-              {stats?.todayAppointments?.length > 0 ? (
-                stats.todayAppointments.map((app: any) => (
-                  <div key={app._id} className="p-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                        {app.patientId.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-800">{app.patientId.name}</p>
-                        <p className="text-xs text-slate-500 font-medium">{new Date(app.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • General Checkup</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-primary/10 text-primary border-0 rounded-lg px-3 py-1 font-bold">{app.status}</Badge>
-                  </div>
-                ))
-              ) : (
-                <div className="py-20 text-center space-y-3">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
-                    <HiOutlineCalendar size={32} />
-                  </div>
-                  <p className="text-slate-400 font-medium">No sessions scheduled for today</p>
-                </div>
-              )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Patient Details</th>
+                    <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Contact</th>
+                    <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Added Date</th>
+                    <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {stats?.patients?.length > 0 ? (
+                    stats.patients.map((patient: any) => (
+                      <tr key={patient._id} className="group hover:bg-slate-50/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-primary font-black shadow-sm group-hover:scale-110 transition-transform">
+                              {patient.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900 group-hover:text-primary transition-colors">{patient.name}</p>
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{patient.profileData?.gender || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-slate-700">{patient.email}</p>
+                          <p className="text-xs text-slate-400 font-medium">{patient.profileData?.phone || 'No phone'}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant="neutral" className="bg-slate-100 text-slate-500 font-bold rounded-lg border-0">
+                            {new Date(patient.createdAt).toLocaleDateString()}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="rounded-xl text-primary font-bold h-10 px-4"
+                              onClick={() => openModal('EDIT_PATIENT', patient)}
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="rounded-xl text-red-500 hover:bg-red-50 font-bold h-10 px-4"
+                              onClick={() => {
+                                openModal('DELETE_CONFIRMATION', {
+                                  title: `Remove ${patient.name}?`,
+                                  description: 'This will permanently remove the patient from your directory and cancel all upcoming sessions. This action cannot be revoked.',
+                                  onConfirm: async () => {
+                                    try {
+                                      await api.delete(`/admin/users/${patient._id}`);
+                                      // Refresh dashboard stats
+                                      const res = await api.get('/doctor/dashboard');
+                                      if (res.data.success) setStats(res.data.data);
+                                    } catch (err) {
+                                      console.error('Failed to remove patient');
+                                    }
+                                  }
+                                });
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-20 text-center text-slate-400 font-medium italic bg-slate-50/20">
+                        No managed patients found in your records.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>

@@ -7,14 +7,18 @@ import { Badge } from '@/components/ui/Badge';
 import { HiOutlineCalendar, HiOutlineMagnifyingGlass, HiOutlinePlus, HiOutlineArrowRight } from 'react-icons/hi2';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { useModal } from '@/context/ModalContext';
+import toast from 'react-hot-toast';
 
 export default function PatientDashboard({ user }: { user: any }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { openModal } = useModal();
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
+        setLoading(true);
         const res = await api.get('/patient/dashboard');
         if (res.data.success) {
           setData(res.data.data);
@@ -27,6 +31,24 @@ export default function PatientDashboard({ user }: { user: any }) {
     };
     fetchDashboard();
   }, []);
+
+  const handleCancelAppointment = (id: string) => {
+    openModal('DELETE_CONFIRMATION', {
+      title: 'Cancel Appointment',
+      description: 'Are you sure you want to cancel this appointment session? This action cannot be reversed.',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/appointments/${id}`);
+          toast.success('Appointment cancelled successfully');
+          // Refresh data
+          const res = await api.get('/patient/dashboard');
+          if (res.data.success) setData(res.data.data);
+        } catch (err) {
+          toast.error('Failed to cancel appointment');
+        }
+      }
+    });
+  };
 
   if (loading) return <div className="space-y-6 animate-pulse">
     <div className="h-40 bg-slate-200 rounded-3xl" />
@@ -79,7 +101,26 @@ export default function PatientDashboard({ user }: { user: any }) {
                     Confirmed for {new Date(data.upcoming[0].date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
-                <Button className="rounded-2xl shrink-0 font-bold px-6">Reschedule</Button>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <Button 
+                    className="rounded-2xl font-bold px-6"
+                    onClick={() => openModal('RESCHEDULE_APPOINTMENT', { 
+                      initialData: data.upcoming[0],
+                      onSuccess: () => {
+                        api.get('/patient/dashboard').then(res => setData(res.data.data));
+                      }
+                    })}
+                  >
+                    Reschedule
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="text-red-500 hover:bg-red-50 rounded-2xl font-bold"
+                    onClick={() => handleCancelAppointment(data.upcoming[0]._id)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="text-center py-10 bg-slate-50 rounded-[2rem]">

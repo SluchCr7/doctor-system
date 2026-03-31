@@ -7,10 +7,10 @@ const authValidations = {
     password: Joi.string().required().min(6).max(100),
     role: Joi.string().valid('patient', 'doctor').default('patient'),
     profileData: Joi.object({
-      phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).message('Please provide a valid phone number'),
-      address: Joi.string().max(200),
-      specialization: Joi.string().max(100),
-      qualifications: Joi.string().max(200),
+      phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null).message('Please provide a valid phone number'),
+      address: Joi.string().max(200).allow('', null),
+      specialization: Joi.string().max(100).allow('', null),
+      qualifications: Joi.string().max(200).allow('', null),
       age: Joi.number().min(0).max(120),
       gender: Joi.string().valid('male', 'female', 'other')
     })
@@ -61,8 +61,8 @@ const profileValidations = {
   }).min(1)
 };
 
-module.exports = { 
-  authValidations, 
+module.exports = {
+  authValidations,
   appointmentValidations,
   profileValidations
 };
