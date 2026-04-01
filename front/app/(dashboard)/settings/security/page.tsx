@@ -79,7 +79,7 @@ const SecuritySettings = () => {
                                 onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
                                 placeholder="Enter current password"
                                 className="w-full pl-4 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all" />
-                            <button onClick={() => setShowCurrent(s => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+                            <button onClick={() => setShowCurrent((s: boolean) => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
                                 {showCurrent ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                             </button>
                         </div>
@@ -91,7 +91,7 @@ const SecuritySettings = () => {
                                 onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))}
                                 placeholder="Min. 12 characters"
                                 className="w-full pl-4 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all" />
-                            <button onClick={() => setShowNew(s => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+                            <button onClick={() => setShowNew((s: boolean) => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
                                 {showNew ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                             </button>
                         </div>
@@ -113,7 +113,7 @@ const SecuritySettings = () => {
                                 onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))}
                                 placeholder="Re-enter new password"
                                 className={`w-full pl-4 pr-12 py-2.5 bg-slate-50 border rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 transition-all ${pwForm.confirm && pwForm.confirm !== pwForm.newPw ? "border-red-300 focus:ring-red-100" : "border-slate-200 focus:ring-primary/15 focus:border-primary"}`} />
-                            <button onClick={() => setShowConfirm(s => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+                            <button onClick={() => setShowConfirm((s: boolean) => !s)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
                                 {showConfirm ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                             </button>
                         </div>
@@ -139,7 +139,7 @@ const SecuritySettings = () => {
                             <p className="text-xs text-slate-500">Require a code from your phone on every login</p>
                         </div>
                     </div>
-                    <button onClick={() => setTwoFa(e => !e)}
+                    <button onClick={() => setTwoFa((e: boolean) => !e)}
                         className={`w-14 h-7 rounded-full relative transition-all ${twoFa ? "bg-primary shadow-md shadow-primary/20" : "bg-slate-200"}`}>
                         <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${twoFa ? "left-8" : "left-1"}`} />
                     </button>
@@ -161,7 +161,7 @@ const SecuritySettings = () => {
                             <p className="text-sm font-bold text-slate-800">Login Alerts via Email</p>
                             <p className="text-xs text-slate-500">Get notified for every new login to your account</p>
                         </div>
-                        <button onClick={() => setLoginAlerts(e => !e)}
+                        <button onClick={() => setLoginAlerts((e: boolean) => !e)}
                             className={`w-12 h-6 rounded-full relative transition-all ${loginAlerts ? "bg-primary shadow-md shadow-primary/20" : "bg-slate-200"}`}>
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${loginAlerts ? "left-7" : "left-1"}`} />
                         </button>

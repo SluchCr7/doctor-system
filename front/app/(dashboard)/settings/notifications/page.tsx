@@ -52,7 +52,7 @@ const NotificationsSettings = () => {
     }, [user]);
 
     const toggle = (i: number, ch: Channel) =>
-        setRules(r => r.map((rule, idx) => idx === i ? { ...rule, [ch]: !rule[ch] } : rule));
+        setRules((r: Rule[]) => r.map((rule, idx) => idx === i ? { ...rule, [ch]: !rule[ch] } : rule));
 
     const save = async () => { 
         try {
@@ -69,7 +69,7 @@ const NotificationsSettings = () => {
         }
     };
 
-    const ChannelToggle = ({ on, onClick, icon: Icon, label }: { on: boolean; onClick: () => void; icon: any; label: string }) => (
+    const ChannelToggle = ({ on, onClick, icon: Icon, label }: { on: boolean; onClick: () => void; icon: React.ElementType; label: string }) => (
         <button onClick={onClick}
             title={label}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${on
@@ -121,7 +121,7 @@ const NotificationsSettings = () => {
                         <h3 className="text-base font-black text-slate-800">Quiet Hours (Do Not Disturb)</h3>
                         <p className="text-xs text-slate-500 mt-0.5">Suppress non-urgent notifications during off-hours</p>
                     </div>
-                    <button onClick={() => setQuietEnabled(e => !e)}
+                    <button onClick={() => setQuietEnabled((e: boolean) => !e)}
                         className={`w-12 h-6 rounded-full relative transition-all ${quietEnabled ? "bg-primary shadow-md shadow-primary/20" : "bg-slate-200"}`}>
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${quietEnabled ? "left-7" : "left-1"}`} />
                     </button>
@@ -148,7 +148,7 @@ const NotificationsSettings = () => {
                         <h3 className="text-base font-black text-slate-800">Daily Summary Digest</h3>
                         <p className="text-xs text-slate-500 mt-0.5">Receive a consolidated report of clinic activity</p>
                     </div>
-                    <button onClick={() => setDigestEnabled(e => !e)}
+                    <button onClick={() => setDigestEnabled((e: boolean) => !e)}
                         className={`w-12 h-6 rounded-full relative transition-all ${digestEnabled ? "bg-primary shadow-md shadow-primary/20" : "bg-slate-200"}`}>
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${digestEnabled ? "left-7" : "left-1"}`} />
                     </button>
