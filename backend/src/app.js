@@ -13,6 +13,9 @@ const authRoutes = require('./routes/authRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
+const financialRoutes = require('./routes/financialRoutes');
+const medicalRoutes = require('./routes/medicalRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Swagger Documentation
 const { specs, swaggerUi } = require('./config/swagger');
@@ -57,6 +60,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/financial', financialRoutes);
+app.use('/api/medical', medicalRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Root route
 app.get('/', (req, res) => {

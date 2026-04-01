@@ -7,10 +7,32 @@ const DoctorAvailability = require('../models/DoctorAvailability');
 // @route   GET /api/doctor/profile
 // @access  Private/Doctor
 exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
-  const profile = await User.findById(req.user.id);
   res.status(200).json({
     success: true,
     data: profile
+  });
+});
+
+/**
+ * @desc    Get single doctor by ID (Public view)
+ * @route   GET /api/doctor/:id
+ * @access  Private
+ */
+exports.getDoctorById = asyncHandler(async (req, res, next) => {
+  const doctor = await User.findOne({ _id: req.params.id, role: 'doctor' }).select('-password -refreshToken');
+  
+  if (!doctor) {
+    return res.status(404).json({ success: false, message: 'Doctor not found' });
+  }
+
+  const availability = await DoctorAvailability.findOne({ doctorId: doctor._id });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      ...doctor.toObject(),
+      availability: availability || null
+    }
   });
 });
 

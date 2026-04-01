@@ -23,6 +23,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   updateProfile: (data: any) => Promise<void>;
   uploadProfileImage: (file: File) => Promise<void>;
+  uploadClinicImage: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await api.post('/auth/me');
+        const response = await api.get('/auth/me');
         if (response.data.success) {
           setUser(response.data.data);
         }
@@ -55,8 +56,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const response = await api.post('/auth/login', credentials);
       if (response.data.success) {
-        setUser(response.data.user);
-        toast.success(`Welcome back, ${response.data.user.name}!`);
+        setUser(response.data.data);
+        toast.success(`Welcome back, ${response.data.data.name}!`);
 
         // Redirect to dashboard
         router.push('/');
@@ -74,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const response = await api.post('/auth/register', data);
       if (response.data.success) {
-        setUser(response.data.user);
+        setUser(response.data.data);
         toast.success('Registration successful!');
 
         // Redirect to dashboard (role-specific view handled there)
@@ -109,15 +110,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       const formData = new FormData();
-      formData.append('image', file);
+      // Explicitly include filename in append for better compatibility
+      formData.append('image', file, file.name);
 
-      const response = await api.post('/auth/profile-image', formData);
+      const response = await api.post('/auth/profile-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       if (response.data.success) {
         setUser(response.data.data);
         toast.success(response.data.message || 'Profile image updated!');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Image upload failed');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uploadClinicImage = async (file: File) => {
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      // Explicitly include filename in append for better compatibility
+      formData.append('image', file, file.name);
+
+      const response = await api.post('/auth/clinic-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      if (response.data.success) {
+        setUser(response.data.data);
+        toast.success(response.data.message || 'Clinic image updated!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Clinic image upload failed');
       throw error;
     } finally {
       setLoading(false);
@@ -136,7 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, updateProfile, uploadProfileImage }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, updateProfile, uploadProfileImage, uploadClinicImage }}>
       {children}
     </AuthContext.Provider>
   );

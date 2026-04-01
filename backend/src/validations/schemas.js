@@ -11,10 +11,14 @@ const authValidations = {
       address: Joi.string().max(200).allow('', null),
       specialization: Joi.string().max(100).allow('', null),
       qualifications: Joi.string().max(200).allow('', null),
+      clinicName: Joi.string().max(200).allow('', null),
+      clinicAddress: Joi.string().max(300).allow('', null),
+      clinicPhone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
+      clinicEmail: Joi.string().email().allow('', null),
       age: Joi.number().min(0).max(120),
       gender: Joi.string().valid('male', 'female', 'other')
-    })
-  }),
+    }).unknown(true)
+  }).unknown(true),
 
   login: Joi.object({
     email: Joi.string().email().required().lowercase().trim(),
@@ -43,7 +47,7 @@ const appointmentValidations = {
 const profileValidations = {
   updatePatient: Joi.object({
     name: Joi.string().min(2).max(50).trim(),
-    profileImage: Joi.string().uri().allow('', null),
+    profileImage: Joi.string().allow('', null),
     profileData: Joi.object({
       phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
       address: Joi.string().max(200).allow('', null),
@@ -55,7 +59,7 @@ const profileValidations = {
 
   updateDoctor: Joi.object({
     name: Joi.string().min(2).max(50).trim(),
-    profileImage: Joi.string().uri().allow('', null),
+    profileImage: Joi.string().allow('', null),
     profileData: Joi.object({
       phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
       address: Joi.string().max(200).allow('', null),
@@ -69,9 +73,12 @@ const profileValidations = {
       // Clinic details
       clinicName: Joi.string().max(200).allow('', null),
       clinicAddress: Joi.string().max(300).allow('', null),
+      clinicPhone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
+      clinicEmail: Joi.string().email().allow('', null),
+      clinicImage: Joi.string().allow('', null),
       consultationFee: Joi.number().min(0)
-    })
-  }).min(1),
+    }).unknown(true)
+  }).unknown(true),
 
   updateAvailability: Joi.object({
     availableDays: Joi.array().items(Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),

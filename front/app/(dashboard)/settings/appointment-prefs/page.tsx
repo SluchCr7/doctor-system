@@ -10,19 +10,19 @@ const AppointmentPrefsSettings = () => {
     const initData = user?.profileData?.appointmentPrefs || {};
 
     const [saved, setSaved] = useState(false);
-    const [visitType, setVisitType] = useState(initData.visitType || "in-person");
-    const [preferredTime, setPreferredTime] = useState(initData.preferredTime || "morning");
-    const [preferredDay, setPreferredDay] = useState(initData.preferredDay || "weekday");
-    const [reminderChannels, setReminderChannels] = useState(initData.reminderChannels || { email: true, sms: true, push: false });
-    const [reminder24h, setReminder24h] = useState(initData.reminder24h ?? true);
-    const [reminder2h, setReminder2h] = useState(initData.reminder2h ?? true);
-    const [reminderDay7, setReminderDay7] = useState(initData.reminderDay7 ?? false);
-    const [followupAuto, setFollowupAuto] = useState(initData.followupAuto ?? true);
-    const [followupDays, setFollowupDays] = useState(initData.followupDays || "7");
-    const [cancellationNotice, setCancellationNotice] = useState(initData.cancellationNotice || "24");
-    const [specialRequirements, setSpecialRequirements] = useState(initData.specialRequirements || "Wheelchair access needed. Prefer female physician when possible.");
-    const [language, setLanguage] = useState(initData.language || "English");
-    const [interpreter, setInterpreter] = useState(initData.interpreter ?? false);
+    const [visitType, setVisitType] = useState<string>(initData.visitType || "in-person");
+    const [preferredTime, setPreferredTime] = useState<string>(initData.preferredTime || "morning");
+    const [preferredDay, setPreferredDay] = useState<string>(initData.preferredDay || "weekday");
+    const [reminderChannels, setReminderChannels] = useState<Record<string, boolean>>(initData.reminderChannels || { email: true, sms: true, push: false });
+    const [reminder24h, setReminder24h] = useState<boolean>(initData.reminder24h ?? true);
+    const [reminder2h, setReminder2h] = useState<boolean>(initData.reminder2h ?? true);
+    const [reminderDay7, setReminderDay7] = useState<boolean>(initData.reminderDay7 ?? false);
+    const [followupAuto, setFollowupAuto] = useState<boolean>(initData.followupAuto ?? true);
+    const [followupDays, setFollowupDays] = useState<string>(initData.followupDays || "7");
+    const [cancellationNotice, setCancellationNotice] = useState<string>(initData.cancellationNotice || "24");
+    const [specialRequirements, setSpecialRequirements] = useState<string>(initData.specialRequirements || "Wheelchair access needed. Prefer female physician when possible.");
+    const [language, setLanguage] = useState<string>(initData.language || "English");
+    const [interpreter, setInterpreter] = useState<boolean>(initData.interpreter ?? false);
 
     useEffect(() => {
         if (user?.profileData?.appointmentPrefs) {
@@ -43,7 +43,7 @@ const AppointmentPrefsSettings = () => {
         }
     }, [user]);
 
-    const save = async () => { 
+    const save = async () => {
         try {
             await updateProfile({
                 profileData: {
@@ -56,8 +56,8 @@ const AppointmentPrefsSettings = () => {
                     }
                 }
             });
-            setSaved(true); 
-            setTimeout(() => setSaved(false), 3000); 
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
         } catch (error) {
             console.error(error);
         }

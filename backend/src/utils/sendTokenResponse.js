@@ -26,12 +26,13 @@ const sendTokenResponse = async (user, statusCode, res) => {
       success: true,
       token,
       refreshToken,
-      user: {
+      data: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        profileImage: user.profileImage
+        profileImage: user.profileImage,
+        profileData: user.profileData
       }
     });
 };

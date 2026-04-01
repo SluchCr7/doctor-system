@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Mail, Lock, User, Phone, MapPin, Briefcase, GraduationCap, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Phone, MapPin, Briefcase, GraduationCap, ArrowRight, Building2, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const [role, setRole] = useState<'patient' | 'doctor'>('patient');
+  const [viewPassword, setViewPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,6 +18,8 @@ export default function RegisterPage() {
       address: '',
       specialization: '', // Doctor only
       qualifications: '', // Doctor only
+      clinicName: '', // Doctor only
+      clinicAddress: '', // Doctor only
       age: 0, // Patient only
       gender: 'male'
     }
@@ -115,14 +118,21 @@ export default function RegisterPage() {
                 <Lock size={18} />
               </div>
               <input
-                type="password"
+                type={viewPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                className="block w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
                 placeholder="••••••••"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setViewPassword(!viewPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-primary transition-colors"
+              >
+                {viewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -181,10 +191,56 @@ export default function RegisterPage() {
                   />
                 </div>
               </div>
+
+              <div className="md:col-span-2 mt-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                    <Building2 size={20} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Clinic Information</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700 ml-1">Clinic Name</label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                        <Building2 size={18} />
+                      </div>
+                      <input
+                        type="text"
+                        name="profileData.clinicName"
+                        value={formData.profileData.clinicName}
+                        onChange={handleChange}
+                        className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                        placeholder="Grand Central Medical"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700 ml-1">Clinic Address</label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                        <MapPin size={18} />
+                      </div>
+                      <input
+                        type="text"
+                        name="profileData.clinicAddress"
+                        value={formData.profileData.clinicAddress}
+                        onChange={handleChange}
+                        className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                        placeholder="789 Wellness St, Suite 500"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </>
           ) : (
             <>
-              <div className="space-y-2 text-primary font-bold">
+              <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 ml-1">Age</label>
                 <input
                   type="number"

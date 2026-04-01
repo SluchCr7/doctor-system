@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  HiOutlineBell, 
   HiOutlineMagnifyingGlass, 
   HiOutlineCalendar, 
   HiOutlineChevronDown, 
@@ -12,6 +11,7 @@ import {
   HiOutlineCog6Tooth,
   HiOutlineUser
 } from 'react-icons/hi2';
+import NotificationBell from './dashboard/NotificationBell';
 
 const Topbar = () => {
   const { user, logout } = useAuth();
@@ -51,11 +51,8 @@ const Topbar = () => {
           />
         </div>
 
-        {/* Notifications */}
-        <button className="relative w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-500 hover:bg-primary/10 hover:text-primary transition-all group">
-          <HiOutlineBell size={22} className="group-hover:rotate-12 transition-transform" />
-          <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full" />
-        </button>
+        {/* Real-time Notifications */}
+        <NotificationBell />
 
         <div className="w-px h-10 bg-slate-100" />
 

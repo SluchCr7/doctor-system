@@ -5,6 +5,7 @@ import { ModalProvider } from "@/context/ModalContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ModalRenderer } from "@/components/modals/ModalRenderer";
 import { Toaster } from "react-hot-toast";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,11 +26,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased text-slate-800 bg-slate-50`}>
         <AuthProvider>
-          <ModalProvider>
-            {children}
-            <ModalRenderer />
-            <Toaster position="top-right" />
-          </ModalProvider>
+          <NotificationProvider>
+            <ModalProvider>
+              {children}
+              <ModalRenderer />
+              <Toaster position="top-right" />
+            </ModalProvider>
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>

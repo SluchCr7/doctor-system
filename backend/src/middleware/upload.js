@@ -1,19 +1,10 @@
 const multer = require('multer');
-const path = require('path');
-const os = require('os');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Save to OS's default directory for temporary files
-    cb(null, os.tmpdir());
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Use memory storage for direct streaming to Cloudinary
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
+  // Check MIME type
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
   } else {
@@ -25,7 +16,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 1024 * 1024 * 5 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit
   }
 });
 

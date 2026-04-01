@@ -1,32 +1,46 @@
 const mongoose = require('mongoose');
 
 const NotificationSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.ObjectId,
+  recipient: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+    required: true,
+    index: true
+  },
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  message: {
+    type: String,
     required: true
   },
   type: {
     type: String,
-    enum: ['appointment', 'profile', 'security', 'system'],
-    default: 'appointment'
+    enum: ['appointment', 'medical_record', 'invoice', 'system', 'message'],
+    default: 'system'
   },
-  message: {
+  relatedId: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: 'onModel'
+  },
+  onModel: {
     type: String,
-    required: [true, 'Please add a message']
+    enum: ['Appointment', 'MedicalRecord', 'Invoice']
   },
-  read: {
+  isRead: {
     type: Boolean,
     default: false
   },
-  meta: {
-    appointmentId: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Appointment'
-    }
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true
 });
 
 module.exports = mongoose.model('Notification', NotificationSchema);

@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import api from '@/context/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { HiOutlineUsers, HiOutlineCalendar, HiOutlinePlus, HiOutlineMagnifyingGlass, HiOutlineArrowRight } from 'react-icons/hi2';
-import { FiActivity } from 'react-icons/fi';
+import { HiOutlineUsers, HiOutlineCalendar, HiOutlinePlus, HiOutlineMagnifyingGlass, HiOutlineArrowRight, HiOutlineCurrencyDollar } from 'react-icons/hi2';
+import { FiActivity, FiTrendingUp, FiShoppingBag, FiLayers } from 'react-icons/fi';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { useModal } from '@/context/ModalContext';
@@ -18,9 +18,16 @@ export default function DoctorDashboard({ user }: { user: any }) {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await api.get('/doctor/dashboard');
-        if (res.data.success) {
-          setStats(res.data.data);
+        const [dashRes, finRes] = await Promise.all([
+          api.get('/doctor/dashboard'),
+          api.get('/api/financial/stats').catch(() => ({ data: { data: null } }))
+        ]);
+        
+        if (dashRes.data.success) {
+          setStats({
+            ...dashRes.data.data,
+            financials: finRes.data.data
+          });
         }
       } catch (err) {
         console.error('Failed to load doctor dashboard stats');
@@ -66,43 +73,60 @@ export default function DoctorDashboard({ user }: { user: any }) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-xl shadow-indigo-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-white border-slate-100 shadow-card hover:shadow-card-hover transition-all group overflow-hidden">
+          <CardContent className="p-6 relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50/50 rounded-full blur-2xl group-hover:bg-indigo-100 transition-colors" />
+            <div className="flex items-center justify-between mb-4 relative">
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform">
                 <HiOutlineUsers size={24} />
               </div>
-              <Badge className="bg-white/20 text-white border-0">+14%</Badge>
+              <Badge variant="info" className="bg-indigo-50 text-indigo-600 border-0">+14%</Badge>
             </div>
-            <p className="text-indigo-100 font-medium">Total Managed Patients</p>
-            <h3 className="text-4xl font-bold mt-2">{stats?.totalPatients || 0}</h3>
+            <p className="text-slate-400 text-xs font-black uppercase tracking-widest leading-none">Registered Patients</p>
+            <h3 className="text-3xl font-black text-slate-900 mt-2">{stats?.totalPatients || 0}</h3>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-sky-500 to-sky-600 text-white border-0 shadow-xl shadow-sky-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+        <Card className="bg-white border-slate-100 shadow-card hover:shadow-card-hover transition-all group overflow-hidden">
+          <CardContent className="p-6 relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-sky-50/50 rounded-full blur-2xl group-hover:bg-sky-100 transition-colors" />
+            <div className="flex items-center justify-between mb-4 relative">
+              <div className="p-3 bg-sky-50 text-sky-600 rounded-2xl group-hover:scale-110 transition-transform">
                 <HiOutlineCalendar size={24} />
               </div>
-              <Badge className="bg-white/20 text-white border-0">Today</Badge>
+              <Badge variant="info" className="bg-sky-50 text-sky-600 border-0">Today</Badge>
             </div>
-            <p className="text-sky-100 font-medium">Appointments Today</p>
-            <h3 className="text-4xl font-bold mt-2">{stats?.todayAppointments?.length || 0}</h3>
+            <p className="text-slate-400 text-xs font-black uppercase tracking-widest leading-none">Daily Sessions</p>
+            <h3 className="text-3xl font-black text-slate-900 mt-2">{stats?.todayAppointments?.length || 0}</h3>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-xl shadow-emerald-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+        <Card className="bg-white border-slate-100 shadow-card hover:shadow-card-hover transition-all group overflow-hidden">
+          <CardContent className="p-6 relative">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50/50 rounded-full blur-2xl group-hover:bg-emerald-100 transition-colors" />
+            <div className="flex items-center justify-between mb-4 relative">
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
+                <FiTrendingUp size={24} />
+              </div>
+              <Badge variant="success" className="bg-emerald-50 text-emerald-600 border-0">Live</Badge>
+            </div>
+            <p className="text-slate-400 text-xs font-black uppercase tracking-widest leading-none">Net Revenue</p>
+            <h3 className="text-3xl font-black text-slate-900 mt-2">${(stats?.financials?.totalRevenue || 0).toLocaleString()}</h3>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-primary border-0 shadow-premium group overflow-hidden">
+          <CardContent className="p-6 relative text-white">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors" />
+            <div className="flex items-center justify-between mb-4 relative">
+              <div className="p-3 bg-white/20 text-white rounded-2xl group-hover:scale-110 transition-transform backdrop-blur-sm">
                 <FiActivity size={24} />
               </div>
-              <Badge className="bg-white/20 text-white border-0">Global</Badge>
+              <Badge className="bg-white/20 text-white border-0">Upcoming</Badge>
             </div>
-            <p className="text-emerald-100 font-medium">Total Upcoming</p>
-            <h3 className="text-4xl font-bold mt-2">{stats?.upcomingAppointments || 0}</h3>
+            <p className="text-white/60 text-xs font-black uppercase tracking-widest leading-none">Active Appointments</p>
+            <h3 className="text-3xl font-black text-white mt-2">{stats?.upcomingAppointments || 0}</h3>
           </CardContent>
         </Card>
       </div>
@@ -171,7 +195,9 @@ export default function DoctorDashboard({ user }: { user: any }) {
                               {patient.name.charAt(0)}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-900 group-hover:text-primary transition-colors">{patient.name}</p>
+                              <Link href={`/patients/${patient._id}`} className="hover:text-primary transition-colors">
+                                <p className="font-bold text-slate-900 group-hover:text-primary transition-colors pointer-events-auto">{patient.name}</p>
+                              </Link>
                               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{patient.profileData?.gender || 'N/A'}</p>
                             </div>
                           </div>

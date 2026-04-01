@@ -26,10 +26,15 @@ exports.bookAppointment = asyncHandler(async (req, res, next) => {
   });
 
   // Notify doctor
-  await Notification.create({
-    userId: doctorId,
-    message: `You have a new appointment booking request from ${req.user.name}`,
-    meta: { appointmentId: appointment._id }
+  const { createNotification } = require('../utils/notifHelper');
+  await createNotification({
+    recipient: doctorId,
+    sender: req.user.id,
+    title: 'New Appointment Request',
+    message: `${req.user.name} has requested a new appointment on ${new Date(date).toLocaleString()}`,
+    type: 'appointment',
+    relatedId: appointment._id,
+    onModel: 'Appointment'
   });
 
   res.status(201).json({
@@ -95,10 +100,15 @@ exports.updateAppointment = asyncHandler(async (req, res, next) => {
 
   // Notify parties
   if (status) {
-    await Notification.create({
-      userId: appointment.patientId,
-      message: `Your appointment status has been updated to: ${status}`,
-      meta: { appointmentId: appointment._id }
+    const { createNotification } = require('../utils/notifHelper');
+    await createNotification({
+      recipient: appointment.patientId,
+      sender: req.user.id,
+      title: 'Appointment Status Update',
+      message: `Your appointment status with ${req.user.name} has been updated to: ${status}`,
+      type: 'appointment',
+      relatedId: appointment._id,
+      onModel: 'Appointment'
     });
   }
 

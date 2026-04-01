@@ -1,185 +1,287 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import {
     FiGlobe, FiMapPin, FiMail, FiPhone, FiCamera,
-    FiInfo, FiCheckCircle, FiHash, FiHome
+    FiInfo, FiCheckCircle, FiHash, FiHome, FiActivity
 } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 const ClinicInfoSettings = () => {
-    const { user, updateProfile } = useAuth();
-    const initData = user?.profileData?.clinicInfo || {};
-
+    const { user, updateProfile, uploadClinicImage } = useAuth();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const [saved, setSaved] = useState(false);
+
     const [form, setForm] = useState({
-        clinicName: initData.clinicName || "MediCare Specialist Clinic",
-        registrationNo: initData.registrationNo || "MC-2024-00847",
-        taxId: initData.taxId || "TIN-447-882-100",
-        website: initData.website || "www.medicare-clinic.com",
-        address: initData.address || "12 Crystal Tower, Healthcare District, New York, NY 10001",
-        city: initData.city || "New York",
-        country: initData.country || "United States",
-        zipCode: initData.zipCode || "10001",
-        email: initData.email || "info@medicare-clinic.com",
-        emergencyLine: initData.emergencyLine || "+1 (800) 555-0199",
-        phone: initData.phone || "+1 (212) 555-0145",
-        bio: initData.bio || "A leading multi-specialty outpatient clinic providing evidence-based care with a patient-first philosophy since 2014.",
-        type: initData.type || "Outpatient Specialist Clinic",
-        beds: initData.beds || "0",
-        staffCount: initData.staffCount || "12",
+        clinicName: "",
+        clinicAddress: "",
+        clinicPhone: "",
+        clinicEmail: "",
+        registrationNo: "",
+        taxId: "",
+        website: "",
+        city: "",
+        country: "United States",
+        zipCode: "",
+        emergencyLine: "",
+        bio: "",
+        type: "Outpatient Specialist Clinic",
+        consultationFee: 0,
+        specialization: "",
+        experienceYears: 0,
+        qualifications: "",
     });
 
     useEffect(() => {
-        if (user?.profileData?.clinicInfo) {
-            setForm(prev => ({ ...prev, ...user.profileData.clinicInfo }));
+        if (user?.profileData) {
+            setForm({
+                clinicName: user.profileData.clinicName || "",
+                clinicAddress: user.profileData.clinicAddress || "",
+                clinicPhone: user.profileData.clinicPhone || "",
+                clinicEmail: user.profileData.clinicEmail || "",
+                registrationNo: user.profileData.registrationNo || "",
+                taxId: user.profileData.taxId || "",
+                website: user.profileData.website || "",
+                city: user.profileData.city || "",
+                country: user.profileData.country || "United States",
+                zipCode: user.profileData.zipCode || "",
+                emergencyLine: user.profileData.emergencyLine || "",
+                bio: user.profileData.bio || "",
+                type: user.profileData.type || "Outpatient Specialist Clinic",
+                consultationFee: user.profileData.consultationFee || 0,
+                specialization: user.profileData.specialization || "",
+                experienceYears: user.profileData.experienceYears || 0,
+                qualifications: user.profileData.qualifications || "",
+            });
         }
     }, [user]);
 
-    const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-        setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setForm(f => ({ ...f, [name]: (name === "consultationFee" || name === "experienceYears") ? Number(value) : value }));
+    };
 
-    const save = async () => { 
+    const save = async () => {
         try {
             await updateProfile({
                 profileData: {
-                    ...user?.profileData,
-                    clinicInfo: form
+                    ...form
                 }
             });
-            setSaved(true); 
-            setTimeout(() => setSaved(false), 3000); 
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
         } catch (error) {
             console.error(error);
         }
     };
 
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setIsUploading(true);
+            await uploadClinicImage(file);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const Field = ({ label, name, type = "text", icon: Icon, placeholder = "" }: { label: string; name: string; type?: string; icon?: any; placeholder?: string }) => (
-        <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">{label}</label>
+        <div className="group space-y-1.5 w-full">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 group-focus-within:text-primary transition-colors">{label}</label>
             <div className="relative">
-                {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />}
+                {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none group-focus-within:text-primary transition-colors" />}
                 <input
                     type={type}
                     name={name}
                     value={(form as any)[name]}
                     onChange={handle}
                     placeholder={placeholder}
-                    className={`w-full ${Icon ? "pl-10" : "pl-4"} pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all`}
+                    className={`w-full ${Icon ? "pl-11" : "pl-4"} pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 placeholder:text-slate-300 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all shadow-sm group-hover:bg-white`}
                 />
             </div>
         </div>
     );
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            {/* Identity Card */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6 flex items-center gap-5">
-                    <div className="relative">
-                        <div className="w-20 h-20 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center text-white">
-                            <HiOutlineBuildingOffice2 className="w-10 h-10" />
+        <div className="max-w-5xl mx-auto space-y-8 pb-12 animate-in fade-in duration-700">
+            {/* Professional Header Section */}
+            <div className="relative bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+                {/* Decorative background element */}
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary/10 via-blue-500/5 to-transparent pointer-events-none" />
+                
+                <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center md:items-start gap-8">
+                    <div className="relative group/photo">
+                        <div className="w-40 h-40 rounded-[2rem] bg-slate-100 border-4 border-white shadow-xl shadow-slate-200 overflow-hidden flex items-center justify-center transition-transform duration-500 group-hover/photo:scale-[1.02]">
+                            {user?.profileData?.clinicImage && user.profileData.clinicImage !== "default-clinic.png" ? (
+                                <Image 
+                                    src={user.profileData.clinicImage} 
+                                    alt="Clinic" 
+                                    fill 
+                                    className="object-cover"
+                                />
+                            ) : (
+                                <HiOutlineBuildingOffice2 className="w-16 h-16 text-slate-300" />
+                            )}
+                            
+                            {isUploading && (
+                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                                    <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                                </div>
+                            )}
                         </div>
-                        <button className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform">
-                            <FiCamera className="w-3.5 h-3.5" />
+                        
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-600 shadow-lg hover:bg-primary hover:text-white transition-all transform hover:scale-110 active:scale-95 group-hover/photo:translate-y-[-4px]"
+                            title="Change Clinic Photo"
+                        >
+                            <FiCamera className="w-5 h-5" />
                         </button>
+                        <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleFileChange} 
+                            className="hidden" 
+                            accept="image/*"
+                        />
                     </div>
-                    <div>
-                        <h2 className="text-xl font-black text-white">{form.clinicName}</h2>
-                        <p className="text-slate-400 text-sm">{form.type}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                            <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full uppercase tracking-wider">● Verified</span>
-                            <span className="text-slate-500 text-xs font-medium">Reg. {form.registrationNo}</span>
+
+                    <div className="flex-1 text-center md:text-left pt-4">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary text-[10px] font-black rounded-full uppercase tracking-widest mb-4">
+                            <FiActivity className="w-3 h-3" /> Practice Settings
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+                            {form.clinicName || "Professional Clinic Profile"}
+                        </h1>
+                        <p className="text-slate-500 font-medium mb-6 flex items-center justify-center md:justify-start gap-2">
+                            <FiMapPin className="text-primary w-4 h-4" /> 
+                            {form.city}, {form.country}
+                        </p>
+                        
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                            <div className="px-5 py-2.5 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center gap-2.5 text-xs font-black shadow-sm">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                CERTIFIED CLINIC
+                            </div>
+                            <div className="px-5 py-2.5 bg-slate-50 text-slate-500 rounded-2xl text-xs font-bold shadow-sm border border-slate-100">
+                                REG: {form.registrationNo || "TBD"}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-6 space-y-6">
-                    <div>
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <FiHome className="w-3.5 h-3.5" /> Clinic Identity
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="Clinic Name" name="clinicName" icon={HiOutlineBuildingOffice2} />
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Clinic Type</label>
-                                <select name="type" value={form.type} onChange={handle}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all">
-                                    <option>Outpatient Specialist Clinic</option>
-                                    <option>General Practice</option>
-                                    <option>Surgical Center</option>
-                                    <option>Diagnostic Center</option>
-                                    <option>Rehabilitation Clinic</option>
-                                    <option>Mental Health Center</option>
-                                    <option>Pediatric Clinic</option>
-                                    <option>Dental Clinic</option>
-                                </select>
+                <div className="px-8 pb-8 md:px-12 md:pb-12 space-y-12">
+                    {/* General Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        <div className="md:col-span-2 space-y-8">
+                            <div>
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center"><FiHome className="w-4 h-4" /></span>
+                                    Core Identity
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Field label="Clinic Professional Name" name="clinicName" icon={HiOutlineBuildingOffice2} placeholder="e.g. Grand Central Medical Center" />
+                                    <div className="group space-y-1.5 w-full">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Facility Classification</label>
+                                        <select name="type" value={form.type} onChange={handle}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all group-hover:bg-white cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_1rem_center] bg-no-repeat">
+                                            <option>Outpatient Specialist Clinic</option>
+                                            <option>General Practice</option>
+                                            <option>Surgical Center</option>
+                                            <option>Diagnostic Center</option>
+                                            <option>Rehabilitation Clinic</option>
+                                        </select>
+                                    </div>
+                                    <Field label="Registration Certificate #" name="registrationNo" icon={FiHash} placeholder="MC-2024-XXXX" />
+                                    <Field label="National Provider / Tax ID" name="taxId" icon={FiInfo} placeholder="TIN-XXX-XXX" />
+                                    <Field label="Standard Consultation Fee ($)" name="consultationFee" type="number" icon={FiActivity} placeholder="75" />
+                                    <Field label="Doctor Specialization" name="specialization" icon={FiActivity} placeholder="e.g. Cardiologist" />
+                                    <Field label="Clinical Experience (Years)" name="experienceYears" type="number" icon={FiHash} placeholder="10" />
+                                    <div className="md:col-span-2">
+                                        <Field label="Academic Qualifications" name="qualifications" icon={FiInfo} placeholder="e.g. MD, PhD in Cardiology" />
+                                    </div>
+                                </div>
                             </div>
-                            <Field label="Registration Number" name="registrationNo" icon={FiHash} />
-                            <Field label="Tax ID / NPI Number" name="taxId" icon={FiInfo} />
+
+                            <div className="border-t border-slate-100 pt-10">
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center"><FiMapPin className="w-4 h-4" /></span>
+                                    Physical Presence
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
+                                        <Field label="Full Street Address" name="clinicAddress" icon={FiMapPin} placeholder="Suite 500, Wellness Medical Building, ..." />
+                                    </div>
+                                    <Field label="Locality / City" name="city" placeholder="New York" />
+                                    <Field label="Global Location" name="country" placeholder="United States" />
+                                    <Field label="Postal / ZIP" name="zipCode" placeholder="10001" />
+                                    <Field label="Digital Practice Hub (URL)" name="website" icon={FiGlobe} placeholder="www.yourclinic.com" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <FiPhone className="w-4 h-4 text-primary" /> Reachability
+                                </h3>
+                                <div className="space-y-6">
+                                    <Field label="Official Support Email" name="clinicEmail" type="email" icon={FiMail} />
+                                    <Field label="Reception Phone Line" name="clinicPhone" icon={FiPhone} />
+                                    <Field label="Critical Hotline" name="emergencyLine" icon={FiPhone} />
+                                </div>
+                            </div>
+
+                            <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10">
+                                <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-4">Practice Bio</h3>
+                                <p className="text-[10px] text-slate-500 font-bold mb-4 uppercase tracking-tighter italic">Published on your booking profile</p>
+                                <textarea
+                                    name="bio"
+                                    value={form.bio}
+                                    onChange={handle}
+                                    rows={6}
+                                    placeholder="Write a professional description of your clinic, its mission, and expertise..."
+                                    className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all resize-none shadow-sm"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <div className="border-t border-slate-50 pt-6">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <FiMapPin className="w-3.5 h-3.5" /> Location & Address
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="md:col-span-2">
-                                <Field label="Street Address" name="address" icon={FiMapPin} />
-                            </div>
-                            <Field label="City" name="city" />
-                            <Field label="ZIP Code" name="zipCode" />
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Country</label>
-                                <select name="country" value={form.country} onChange={handle}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all">
-                                    <option>United States</option>
-                                    <option>United Kingdom</option>
-                                    <option>Canada</option>
-                                    <option>Australia</option>
-                                    <option>Germany</option>
-                                    <option>France</option>
-                                    <option>UAE</option>
-                                    <option>Saudi Arabia</option>
-                                </select>
-                            </div>
-                            <Field label="Official Website" name="website" icon={FiGlobe} />
-                        </div>
-                    </div>
-
-                    <div className="border-t border-slate-50 pt-6">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <FiPhone className="w-3.5 h-3.5" /> Contact Channels
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="Primary Email" name="email" type="email" icon={FiMail} />
-                            <Field label="Main Phone Number" name="phone" icon={FiPhone} />
-                            <Field label="Emergency / Hotline" name="emergencyLine" icon={FiPhone} />
-                        </div>
-                    </div>
-
-                    <div className="border-t border-slate-50 pt-6">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">About the Clinic</h3>
-                        <textarea
-                            name="bio"
-                            value={form.bio}
-                            onChange={handle}
-                            rows={3}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all resize-none"
-                        />
-                    </div>
-
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-                        {saved && (
-                            <span className="flex items-center gap-2 text-emerald-600 text-sm font-bold">
-                                <FiCheckCircle className="w-4 h-4" /> Changes saved successfully
-                            </span>
-                        )}
-                        <div className={`flex gap-3 ${saved ? "" : "ml-auto"}`}>
-                            <Button variant="outline">Discard</Button>
-                            <Button onClick={save}>Save Clinic Info</Button>
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 pt-10 border-t border-slate-100">
+                        <AnimatePresence>
+                            {saved && (
+                                <motion.span 
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="flex items-center gap-2.5 text-emerald-600 text-sm font-black italic"
+                                >
+                                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center">
+                                        <FiCheckCircle className="w-3.5 h-3.5" />
+                                    </div>
+                                    Synchronized with Database
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
+                        
+                        <div className={`flex items-center gap-4 ${saved ? "" : "ml-auto"}`}>
+                            <button className="px-6 py-3.5 text-slate-500 font-bold text-sm hover:text-slate-700 transition-colors">
+                                Discard Edits
+                            </button>
+                            <Button 
+                                onClick={save}
+                                className="px-10 py-3.5 bg-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-primary/30 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                Commmit Changes
+                            </Button>
                         </div>
                     </div>
                 </div>

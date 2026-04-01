@@ -1,11 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { getDoctorDashboard, getDoctorPatients, updateAvailability, getAvailability, getDoctorProfile, updateDoctorProfile } = require('../controllers/doctorController');
+const { 
+  getDoctorDashboard, 
+  getDoctorPatients, 
+  updateAvailability, 
+  getAvailability, 
+  getDoctorProfile, 
+  updateDoctorProfile,
+  getDoctorById 
+} = require('../controllers/doctorController');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { profileValidations } = require('../validations/schemas');
 
 router.use(protect);
+
+router.get('/:id', getDoctorById);
+
 router.use(authorize('doctor', 'admin'));
 
 router.get('/profile', getDoctorProfile);

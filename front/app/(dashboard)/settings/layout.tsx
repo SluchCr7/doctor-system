@@ -16,51 +16,34 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
     const doctorNav = [
         {
-            group: "Practice Management",
+            group: "Practice",
             items: [
-                { label: "Clinic Information", icon: FiGlobe, path: "/settings/clinic", desc: "Clinic name, address & contact" },
+                { label: "Practice Profile", icon: FiGlobe, path: "/settings/clinic", desc: "Clinic details & professional info" },
                 { label: "Working Hours", icon: FiClock, path: "/settings/hours", desc: "Schedule & availability" },
-                { label: "Doctor Profile", icon: FiUser, path: "/settings/doctor", desc: "Credentials & specialization" },
             ]
         },
         {
             group: "Operations",
             items: [
-                { label: "Notifications", icon: FiBell, path: "/settings/notifications", desc: "Alerts & reminders" },
-                { label: "User Roles & Access", icon: FiShield, path: "/settings/roles", desc: "Staff permissions" },
-                { label: "Billing & Subscriptions", icon: FiCreditCard, path: "/settings/billing-plan", desc: "Plan & invoices" },
-            ]
-        },
-        {
-            group: "System",
-            items: [
-                { label: "Security & 2FA", icon: FiLock, path: "/settings/security", desc: "Password & authentication" },
-                { label: "Data Backup", icon: FiSave, path: "/settings/backup", desc: "Export & restore data" },
+                { label: "Financials", icon: FiCreditCard, path: "/settings/billing-plan", desc: "Revenue, payments & invoices" },
+                { label: "Security", icon: FiLock, path: "/settings/security", desc: "Password & authentication" },
             ]
         }
     ];
 
     const patientNav = [
         {
-            group: "Personal",
+            group: "Health",
             items: [
-                { label: "Personal Info", icon: FiUser, path: "/settings/personal", desc: "Name, DOB & address" },
-                { label: "Medical History", icon: FiHeart, path: "/settings/medical", desc: "Conditions & medications" },
-                { label: "Insurance & Privacy", icon: FiEye, path: "/settings/insurance", desc: "Coverage & data consent" },
-            ]
-        },
-        {
-            group: "Appointments",
-            items: [
-                { label: "Appointment Preferences", icon: FiCalendar, path: "/settings/appointment-prefs", desc: "Visit type & reminders" },
-                { label: "Notifications", icon: FiBell, path: "/settings/notifications", desc: "Alerts & follow-ups" },
+                { label: "Personal Profile", icon: FiUser, path: "/settings/personal", desc: "Name, contact & basic info" },
+                { label: "Medical History", icon: FiHeart, path: "/settings/medical", desc: "Records, conditions & meds" },
             ]
         },
         {
             group: "Account",
             items: [
-                { label: "Security & Password", icon: FiLock, path: "/settings/security", desc: "Login & 2FA" },
-                { label: "Connected Devices", icon: FiSmartphone, path: "/settings/devices", desc: "Sessions & wearables" },
+                { label: "Financials", icon: FiCreditCard, path: "/settings/billing-plan", desc: "Your payments & invoices" },
+                { label: "Security", icon: FiLock, path: "/settings/security", desc: "Login & password" },
             ]
         }
     ];

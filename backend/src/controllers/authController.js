@@ -178,19 +178,29 @@ exports.getAllUsers = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.uploadProfileImage = asyncHandler(async (req, res, next) => {
   if (!req.file) {
-    return res.status(400).json({ success: false, message: 'Please upload an image file' });
+    return res.status(400).json({ success: false, message: 'Please upload an image file (field: image)' });
   }
 
   try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'doctor-system/profiles',
-      width: 500,
-      height: 500,
-      crop: 'fill',
-    });
+    // Stream upload from buffer using Cloudinary's upload_stream
+    const uploadFromBuffer = (fileBuffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'doctor-system/profiles',
+            resource_type: 'image',
+            transformation: [{ width: 500, height: 500, crop: 'fill', gravity: 'face' }]
+          },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          }
+        );
+        stream.end(fileBuffer);
+      });
+    };
 
-    // Remove file from local temp storage
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    const result = await uploadFromBuffer(req.file.buffer);
 
     // Update user profile
     const user = await User.findByIdAndUpdate(
@@ -199,16 +209,80 @@ exports.uploadProfileImage = asyncHandler(async (req, res, next) => {
       { new: true, runValidators: true }
     );
 
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const userData = user.toObject();
+    userData.id = userData._id;
+
     res.status(200).json({
       success: true,
       message: 'Profile image updated successfully',
-      data: user
+      data: userData
     });
   } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    console.error('Profile Upload Error:', err);
+    return res.status(500).json({ success: false, message: `Image upload failed: ${err.message}` });
+  }
+});
+// @desc    Upload Clinic Image
+// @route   POST /api/auth/clinic-image
+// @access  Private/Doctor
+exports.uploadClinicImage = asyncHandler(async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Please upload an image file (field: image)' });
+  }
+
+  try {
+    const uploadFromBuffer = (fileBuffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'doctor-system/clinics',
+            resource_type: 'image',
+            transformation: [{ width: 1000, height: 600, crop: 'fit' }]
+          },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          }
+        );
+        stream.end(fileBuffer);
+      });
+    };
+
+    const result = await uploadFromBuffer(req.file.buffer);
+
+    // Update clinic image in user's profileData
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    console.error(err);
-    return res.status(500).json({ success: false, message: 'Image upload failed' });
+    
+    if (user.role !== 'doctor') {
+      return res.status(403).json({ success: false, message: 'Only doctor accounts can have clinic images' });
+    }
+
+    if (!user.profileData) {
+      user.profileData = {};
+    }
+
+    user.profileData.clinicImage = result.secure_url;
+    user.markModified('profileData');
+    
+    await user.save({ validateBeforeSave: false });
+
+    const userData = user.toObject();
+    userData.id = userData._id;
+
+    res.status(200).json({
+      success: true,
+      message: 'Clinic image updated successfully',
+      data: userData
+    });
+  } catch (err) {
+    console.error('Clinic Upload Error:', err);
+    return res.status(500).json({ success: false, message: `Clinic image upload failed: ${err.message}` });
   }
 });

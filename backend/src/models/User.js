@@ -27,7 +27,7 @@ const UserSchema = new mongoose.Schema({
   },
   profileImage: {
     type: String,
-    default: 'default-profile.png'
+    default: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
   },
   profileData: {
     phone: String,
@@ -45,6 +45,12 @@ const UserSchema = new mongoose.Schema({
     // Clinic details (doctor)
     clinicName: String,
     clinicAddress: String,
+    clinicPhone: String,
+    clinicEmail: String,
+    clinicImage: {
+      type: String,
+      default: 'default-clinic.png'
+    },
     consultationFee: Number,
     // Patient-specific
     age: Number,
