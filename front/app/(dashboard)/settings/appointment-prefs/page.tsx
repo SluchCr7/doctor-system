@@ -63,7 +63,7 @@ const AppointmentPrefsSettings = () => {
         }
     };
 
-    const VisitTypeCard = ({ icon: Icon, label, value, desc }: { icon: any; label: string; value: string; desc: string }) => (
+    const VisitTypeCard = ({ icon: Icon, label, value, desc }: { icon: React.ElementType; label: string; value: string; desc: string }) => (
         <button onClick={() => setVisitType(value)}
             className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 text-center transition-all ${visitType === value ? "border-primary bg-primary/5 shadow-md shadow-primary/10" : "border-slate-100 hover:border-slate-200"}`}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${visitType === value ? "bg-primary text-white shadow-md shadow-primary/30" : "bg-slate-100 text-slate-500"}`}>
@@ -215,7 +215,7 @@ const AppointmentPrefsSettings = () => {
                             <p className="text-sm font-bold text-slate-800">Requires Language Interpreter</p>
                             <p className="text-xs text-slate-500">Clinic will arrange a certified interpreter for {language} consultations</p>
                         </div>
-                        <button onClick={() => setInterpreter(e => !e)}
+                        <button onClick={() => setInterpreter((e: boolean) => !e)}
                             className={`w-12 h-6 rounded-full relative transition-all shrink-0 ml-4 ${interpreter ? "bg-primary shadow-md shadow-primary/20" : "bg-slate-200"}`}>
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${interpreter ? "left-7" : "left-1"}`} />
                         </button>

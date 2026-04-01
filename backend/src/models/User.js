@@ -49,7 +49,7 @@ const UserSchema = new mongoose.Schema({
     clinicEmail: String,
     clinicImage: {
       type: String,
-      default: 'default-clinic.png'
+      default: 'https://cdn.pixabay.com/photo/2016/11/06/10/35/hospital-1802680_1280.jpg'
     },
     consultationFee: Number,
     // Patient-specific

@@ -4,7 +4,16 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { FiClock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
-const defaultDays = [
+interface Day {
+    name: string;
+    active: boolean;
+    from: string;
+    to: string;
+    breakFrom: string;
+    breakTo: string;
+}
+
+const defaultDays: Day[] = [
     { name: "Monday", active: true, from: "09:00", to: "18:00", breakFrom: "13:00", breakTo: "14:00" },
     { name: "Tuesday", active: true, from: "09:00", to: "18:00", breakFrom: "13:00", breakTo: "14:00" },
     { name: "Wednesday", active: true, from: "09:00", to: "18:00", breakFrom: "13:00", breakTo: "14:00" },
@@ -18,7 +27,7 @@ const WorkingHoursSettings = () => {
     const { user, updateProfile } = useAuth();
     const initData = user?.profileData?.workingHours || {};
 
-    const [days, setDays] = useState(initData.days || defaultDays);
+    const [days, setDays] = useState<Day[]>(initData.days || defaultDays);
     const [slotDuration, setSlotDuration] = useState(initData.slotDuration || "30");
     const [bufferTime, setBufferTime] = useState(initData.bufferTime || "10");
     const [maxDaily, setMaxDaily] = useState(initData.maxDaily || "24");
@@ -36,9 +45,9 @@ const WorkingHoursSettings = () => {
         }
     }, [user]);
 
-    const toggle = (i: number) => setDays(d => d.map((day, idx) => idx === i ? { ...day, active: !day.active } : day));
+    const toggle = (i: number) => setDays((d: Day[]) => d.map((day, idx) => idx === i ? { ...day, active: !day.active } : day));
     const updateDay = (i: number, key: string, val: string) =>
-        setDays(d => d.map((day, idx) => idx === i ? { ...day, [key]: val } : day));
+        setDays((d: Day[]) => d.map((day, idx) => idx === i ? { ...day, [key]: val } : day));
 
     const save = async () => { 
         try {
@@ -168,7 +177,7 @@ const WorkingHoursSettings = () => {
                             <p className="text-xs text-slate-500 mt-0.5">Override full schedule for urgent cases registered manually by front desk</p>
                         </div>
                     </div>
-                    <button onClick={() => setEmergency(e => !e)}
+                    <button onClick={() => setEmergency((e: boolean) => !e)}
                         className={`w-12 h-6 rounded-full relative transition-all shrink-0 ml-4 ${emergency ? "bg-amber-500" : "bg-slate-200"}`}>
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${emergency ? "left-7" : "left-1"}`} />
                     </button>
