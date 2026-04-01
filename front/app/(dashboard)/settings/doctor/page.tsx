@@ -67,7 +67,7 @@ const DoctorProfileSettings = () => {
     };
 
     const removeLang = (l: string) =>
-        setForm(f => ({ ...f, languages: f.languages.filter(x => x !== l) }));
+        setForm(f => ({ ...f, languages: (f.languages as string[]).filter((x: string) => x !== l) }));
 
     const save = async () => { 
         try {
@@ -194,7 +194,7 @@ const DoctorProfileSettings = () => {
                 <div className="mt-5 space-y-3">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Languages Spoken</label>
                     <div className="flex flex-wrap gap-2">
-                        {form.languages.map(l => (
+                        {(form.languages as string[]).map((l: string) => (
                             <span key={l} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border border-primary/10 text-primary text-xs font-bold rounded-full">
                                 {l}
                                 <button onClick={() => removeLang(l)} className="hover:text-red-500 transition-colors">
