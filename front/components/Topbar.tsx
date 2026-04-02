@@ -12,9 +12,11 @@ import {
   HiOutlineUser
 } from 'react-icons/hi2';
 import NotificationBell from './dashboard/NotificationBell';
+import { useModal } from '@/context/ModalContext';
 
 const Topbar = () => {
   const { user, logout } = useAuth();
+  const { openModal } = useModal();
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -42,14 +44,18 @@ const Topbar = () => {
       {/* Action Cluster */}
       <div className="flex items-center gap-6">
         {/* Search */}
-        <div className="hidden lg:flex items-center bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 group focus-within:ring-2 focus-within:ring-primary/10 transition-all">
-          <HiOutlineMagnifyingGlass className="text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search records..." 
-            className="bg-transparent border-0 focus:ring-0 text-sm font-medium text-slate-600 placeholder:text-slate-300 ml-2 w-48"
-          />
-        </div>
+        <button 
+          onClick={() => openModal('QUICK_SEARCH')}
+          className="hidden lg:flex items-center gap-6 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 group hover:bg-white hover:shadow-lg transition-all"
+        >
+          <div className="flex items-center gap-3">
+             <HiOutlineMagnifyingGlass className="text-slate-400 group-hover:text-primary transition-colors" size={18} />
+             <span className="text-sm font-bold text-slate-400">Search clinical records...</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-lg text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-100">
+             ⌘ K
+          </div>
+        </button>
 
         {/* Real-time Notifications */}
         <NotificationBell />

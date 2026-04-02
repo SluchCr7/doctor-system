@@ -156,9 +156,27 @@ export default function PatientDashboard({ user }: { user: any }) {
           <h3 className="text-xl font-black text-gray-500 mb-2">Quick Actions</h3>
           <p className="text-slate-400 text-xs font-medium mb-6">Access your most used tools instantly</p>
           <div className="space-y-3 relative z-10">
-            <Button className="w-full justify-start rounded-xl bg-white/10 hover:bg-white/20 border-0 text-gray-800 font-bold h-12" leftIcon={<HiOutlinePlus />}>New Medical Note</Button>
-            <Button className="w-full justify-start rounded-xl bg-white/10 hover:bg-white/20 border-0 text-gray-800 font-bold h-12" leftIcon={<HiOutlineDocumentText />}>Request Records</Button>
-            <Button className="w-full justify-start rounded-xl bg-white/10 hover:bg-white/20 border-0 text-gray-800 font-bold h-12" leftIcon={<FiCreditCard />}>Pay Pending Bills</Button>
+            <Button 
+                className="w-full justify-start rounded-xl bg-white/10 hover:bg-white/20 border-0 text-gray-800 font-bold h-12" 
+                leftIcon={<HiOutlinePlus />}
+                onClick={() => openModal('ADD_MEDICAL_NOTE')}
+            >
+                New Medical Note
+            </Button>
+            <Button 
+                className="w-full justify-start rounded-xl bg-white/10 hover:bg-white/20 border-0 text-gray-800 font-bold h-12" 
+                leftIcon={<HiOutlineDocumentText />}
+                onClick={() => openModal('REQUEST_RECORDS')}
+            >
+                Request Records
+            </Button>
+            <Button 
+                className="w-full justify-start rounded-xl bg-white/10 hover:bg-white/20 border-0 text-gray-800 font-bold h-12" 
+                leftIcon={<FiCreditCard />}
+                onClick={() => openModal('PAYMENT')}
+            >
+                Pay Pending Bills
+            </Button>
           </div>
         </Card>
       </div>

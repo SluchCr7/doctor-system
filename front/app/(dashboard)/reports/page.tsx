@@ -14,7 +14,7 @@ import {
 
 const ReportsPage = () => {
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-8 p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div>

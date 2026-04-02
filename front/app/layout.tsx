@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ModalRenderer } from "@/components/modals/ModalRenderer";
 import { Toaster } from "react-hot-toast";
 import { NotificationProvider } from "@/context/NotificationContext";
+import HotKeyHandler from "@/components/HotKeyHandler";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({
             <ModalProvider>
               {children}
               <ModalRenderer />
+              <HotKeyHandler />
               <Toaster position="top-right" />
             </ModalProvider>
           </NotificationProvider>

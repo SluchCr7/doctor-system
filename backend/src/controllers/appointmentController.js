@@ -143,3 +143,76 @@ exports.deleteAppointment = asyncHandler(async (req, res, next) => {
     data: {}
   });
 });
+// @desc    Accept appointment
+// @route   PATCH /api/appointments/:id/accept
+// @access  Private/Doctor
+exports.acceptAppointment = asyncHandler(async (req, res, next) => {
+  let appointment = await Appointment.findById(req.params.id);
+
+  if (!appointment) {
+    return res.status(404).json({ success: false, message: 'Appointment not found' });
+  }
+
+  if (appointment.doctorId.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized to accept this appointment' });
+  }
+
+  appointment = await Appointment.findByIdAndUpdate(req.params.id, { status: 'confirmed' }, {
+    new: true,
+    runValidators: true
+  });
+
+  // Notify patient
+  const { createNotification } = require('../utils/notifHelper');
+  await createNotification({
+    recipient: appointment.patientId,
+    sender: req.user.id,
+    title: 'Appointment Accepted',
+    message: `Your appointment with Dr. ${req.user.name} has been accepted.`,
+    type: 'appointment',
+    relatedId: appointment._id,
+    onModel: 'Appointment'
+  });
+
+  res.status(200).json({
+    success: true,
+    data: appointment
+  });
+});
+
+// @desc    Reject appointment
+// @route   PATCH /api/appointments/:id/reject
+// @access  Private/Doctor
+exports.rejectAppointment = asyncHandler(async (req, res, next) => {
+  let appointment = await Appointment.findById(req.params.id);
+
+  if (!appointment) {
+    return res.status(404).json({ success: false, message: 'Appointment not found' });
+  }
+
+  if (appointment.doctorId.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized to reject this appointment' });
+  }
+
+  appointment = await Appointment.findByIdAndUpdate(req.params.id, { status: 'cancelled' }, {
+    new: true,
+    runValidators: true
+  });
+
+  // Notify patient
+  const { createNotification } = require('../utils/notifHelper');
+  await createNotification({
+    recipient: appointment.patientId,
+    sender: req.user.id,
+    title: 'Appointment Rejected',
+    message: `Your appointment with Dr. ${req.user.name} was not accepted.`,
+    type: 'appointment',
+    relatedId: appointment._id,
+    onModel: 'Appointment'
+  });
+
+  res.status(200).json({
+    success: true,
+    data: appointment
+  });
+});

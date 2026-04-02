@@ -21,7 +21,12 @@ export type ModalType =
     | "WRITE_PRESCRIPTION"
     | "PRINT_PRESCRIPTION"
     | "PAYMENT"
-    | "VIEW_HISTORY";
+    | "VIEW_HISTORY"
+    | "QUICK_SEARCH"
+    | "ADD_MEDICAL_NOTE"
+    | "REQUEST_RECORDS"
+    | "BLOCK_TIME"
+    | "GENERATE_REPORT";
 
 // ── Typed Props Per Modal ─────────────────────────────────────────────────────
 export interface DeleteConfirmationProps {

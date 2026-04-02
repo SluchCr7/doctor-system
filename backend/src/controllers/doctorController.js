@@ -73,17 +73,12 @@ exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
 exports.getDoctorDashboard = asyncHandler(async (req, res, next) => {
   const doctorId = req.user.id;
 
-  // Total patients who ever booked with this doctor
-  const totalPatients = await Appointment.distinct('patientId', { doctorId });
-
-  // Upcoming appointments
-  const upcomingAppointments = await Appointment.countDocuments({
-    doctorId,
-    date: { $gte: new Date() },
-    status: { $in: ['pending', 'confirmed'] }
-  });
-
-  // Today's appointments
+  // Stats
+  const totalPatients = await Appointment.distinct('patientId', { doctorId, status: 'confirmed' });
+  const totalAppointments = await Appointment.countDocuments({ doctorId });
+  const pendingRequests = await Appointment.countDocuments({ doctorId, status: 'pending' });
+  
+  // Today's appointments (with full patient details)
   const startOfDay = new Date();
   startOfDay.setHours(0,0,0,0);
   const endOfDay = new Date();
@@ -92,14 +87,34 @@ exports.getDoctorDashboard = asyncHandler(async (req, res, next) => {
   const todayAppointments = await Appointment.find({
     doctorId,
     date: { $gte: startOfDay, $lte: endOfDay }
-  }).populate('patientId', 'name email');
+  })
+  .populate('patientId', 'name email profileImage profileData')
+  .sort({ date: 1 });
+
+  // Upcoming appointments (next 7 days, excluding today)
+  const sevenDaysFromNow = new Date();
+  sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+  
+  const upcomingAppointments = await Appointment.find({
+    doctorId,
+    date: { $gt: endOfDay, $lte: sevenDaysFromNow },
+    status: 'confirmed'
+  })
+  .populate('patientId', 'name email profileImage')
+  .sort({ date: 1 })
+  .limit(5);
 
   res.status(200).json({
     success: true,
     data: {
-      totalPatients: totalPatients.length,
-      upcomingAppointments,
-      todayAppointments
+      stats: {
+        totalPatients: totalPatients.length,
+        totalAppointments,
+        pendingRequests,
+        todayCount: todayAppointments.length
+      },
+      todayAppointments,
+      upcomingAppointments
     }
   });
 });
@@ -110,11 +125,30 @@ exports.getDoctorDashboard = asyncHandler(async (req, res, next) => {
 exports.getDoctorPatients = asyncHandler(async (req, res, next) => {
   const doctorId = req.user.id;
   
-  // Find all appointments for this doctor and extract unique patient IDs
-  const patientIds = await Appointment.distinct('patientId', { doctorId });
+  // Find all confirmed appointments for this doctor to identify "active" patients
+  const appointments = await Appointment.find({ doctorId, status: 'confirmed' })
+    .populate('patientId', 'name email profileImage profileData createdAt')
+    .sort({ date: -1 });
   
-  const patients = await User.find({ _id: { $in: patientIds } })
-    .select('name email profileData createdAt');
+  // Map to unique patients with their last appointment date
+  const patientMap = new Map();
+  
+  appointments.forEach(app => {
+    if (app.patientId && !patientMap.has(app.patientId._id.toString())) {
+      patientMap.set(app.patientId._id.toString(), {
+        _id: app.patientId._id,
+        name: app.patientId.name,
+        email: app.patientId.email,
+        profileImage: app.patientId.profileImage,
+        profileData: app.patientId.profileData,
+        lastAppointment: app.date,
+        status: 'Active', // Can be dynamic based on last appointment
+        joinedAt: app.patientId.createdAt
+      });
+    }
+  });
+
+  const patients = Array.from(patientMap.values());
 
   res.status(200).json({
     success: true,

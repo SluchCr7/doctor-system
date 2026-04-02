@@ -20,6 +20,11 @@ import PrintPrescriptionModal from "./PrintPrescriptionModal";
 import WritePrescriptionModal from "./WritePrescriptionModal";
 import PaymentModal from "./PaymentModal";
 import ViewHistoryModal from "./ViewHistoryModal";
+import QuickSearchModal from "./QuickSearchModal";
+import AddMedicalNoteModal from "./AddMedicalNoteModal";
+import RequestRecordsModal from "./RequestRecordsModal";
+import BlockTimeModal from "./BlockTimeModal";
+import GenerateReportModal from "./GenerateReportModal";
 
 export const ModalRenderer = () => {
     const { isOpen, modalType, modalProps, closeModal } = useModal();
@@ -132,6 +137,62 @@ export const ModalRenderer = () => {
                     isOpen={isOpen}
                     onClose={closeModal}
                     {...(modalProps as any)}
+                />
+            );
+
+        case "QUICK_SEARCH":
+            return (
+                <QuickSearchModal
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                />
+            );
+
+        case "ADD_MEDICAL_NOTE":
+            return (
+                <AddMedicalNoteModal
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                    onSubmit={(data: any) => {
+                        console.log("Personal note added", data);
+                        closeModal();
+                    }}
+                />
+            );
+
+        case "REQUEST_RECORDS":
+            return (
+                <RequestRecordsModal
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                    onSubmit={(data: any) => {
+                        console.log("Records requested", data);
+                        closeModal();
+                    }}
+                />
+            );
+
+        case "BLOCK_TIME":
+            return (
+                <BlockTimeModal
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                    onSubmit={(data: any) => {
+                        console.log("Time blocked", data);
+                        closeModal();
+                    }}
+                />
+            );
+
+        case "GENERATE_REPORT":
+            return (
+                <GenerateReportModal
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                    onSubmit={(data: any) => {
+                        console.log("Report generating", data);
+                        closeModal();
+                    }}
                 />
             );
 
