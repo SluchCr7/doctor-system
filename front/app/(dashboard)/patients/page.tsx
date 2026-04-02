@@ -152,7 +152,7 @@ const PatientsPage = () => {
                                         </TableRow>
                                     ))
                                 ) : filteredPatients.length === 0 ? (
-                                    <TableRow border={false}>
+                                    <TableRow>
                                         <TableCell colSpan={5} className="text-center text-slate-400 py-32">
                                             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                                                 <HiOutlineUserCircle className="w-12 h-12 opacity-20" />
