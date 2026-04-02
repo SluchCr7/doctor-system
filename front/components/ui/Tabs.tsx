@@ -34,7 +34,7 @@ export const TabsList = ({
     children: React.ReactNode;
 }) => {
     return (
-        <div className={`inline-flex items-center justify-center rounded-xl bg-slate-100 p-1 text-slate-500 ${className}`}>
+        <div className={`inline-flex items-center justify-center rounded-xl bg-background-subtle p-1 text-text-secondary ${className}`}>
             {children}
         </div>
     );
@@ -57,9 +57,9 @@ export const TabsTrigger = ({
     return (
         <button
             onClick={() => context.setActiveTab(value)}
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${isActive
-                    ? "bg-white text-slate-950 shadow-sm"
-                    : "hover:bg-slate-200/50 hover:text-slate-900"
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${isActive
+                    ? "bg-surface text-text-primary shadow-sm"
+                    : "hover:bg-surface-hover hover:text-text-primary"
                 } ${className}`}
         >
             {children}
@@ -83,7 +83,7 @@ export const TabsContent = ({
 
     return (
         <div
-            className={`mt-4 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}
+            className={`mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}
         >
             {children}
         </div>

@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { FiHeart, FiPlus, FiX, FiCheckCircle, FiAlertCircle, FiInfo } from "react-icons/fi";
+import { FiHeart, FiPlus, FiX, FiCheckCircle, FiAlertCircle, FiInfo, FiPhone } from "react-icons/fi";
 import { HiOutlineBeaker, HiOutlineExclamationTriangle, HiOutlineDocumentText } from "react-icons/hi2";
 import api from "@/context/api";
 import toast from "react-hot-toast";
@@ -17,6 +17,16 @@ const MedicalRecordsPage = () => {
     const isPatient = user?.role === "patient";
     
     // Patient self-filled data
+    const [age, setAge] = useState(user?.profileData?.age || '');
+    const [dob, setDob] = useState(user?.profileData?.dob ? user.profileData.dob.split('T')[0] : '');
+    const [bloodType, setBloodType] = useState(user?.profileData?.bloodType || '');
+    const [insurance, setInsurance] = useState(user?.profileData?.insuranceProvider || '');
+    const [emergency, setEmergency] = useState({
+        name: user?.profileData?.emergencyContact?.name || '',
+        phone: user?.profileData?.emergencyContact?.phone || '',
+        relation: user?.profileData?.emergencyContact?.relation || ''
+    });
+
     const [conditions, setConditions] = useState<string[]>(user?.profileData?.medicalHistory?.conditions || []);
     const [allergies, setAllergies] = useState<string[]>(user?.profileData?.medicalHistory?.allergies || []);
     const [meds, setMeds] = useState<string[]>(user?.profileData?.medicalHistory?.medications || []);
@@ -25,6 +35,23 @@ const MedicalRecordsPage = () => {
     const [officialRecords, setOfficialRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        if (user?.profileData) {
+            setAge(user.profileData.age || '');
+            setDob(user.profileData.dob ? user.profileData.dob.split('T')[0] : '');
+            setBloodType(user.profileData.bloodType || '');
+            setInsurance(user.profileData.insuranceProvider || '');
+            setEmergency({
+                name: user.profileData.emergencyContact?.name || '',
+                phone: user.profileData.emergencyContact?.phone || '',
+                relation: user.profileData.emergencyContact?.relation || ''
+            });
+            setConditions(user.profileData.medicalHistory?.conditions || []);
+            setAllergies(user.profileData.medicalHistory?.allergies || []);
+            setMeds(user.profileData.medicalHistory?.medications || []);
+        }
+    }, [user]);
 
     useEffect(() => {
         const fetchRecords = async () => {
@@ -47,6 +74,11 @@ const MedicalRecordsPage = () => {
             await updateProfile({
                 profileData: {
                     ...user?.profileData,
+                    age: age ? Number(age) : undefined,
+                    dob: dob || undefined,
+                    bloodType,
+                    insuranceProvider: insurance,
+                    emergencyContact: emergency,
                     medicalHistory: {
                         ...user?.profileData?.medicalHistory,
                         conditions,
@@ -135,6 +167,79 @@ const MedicalRecordsPage = () => {
                     )}
                 </div>
             </Card>
+
+            {/* Health Identity & Emergency */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Basic Health Info */}
+                <Card className="border-0 shadow-card p-8 rounded-[2.5rem] bg-white ring-1 ring-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+                            <FiInfo className="text-primary" /> Health Identity
+                        </h3>
+                        <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-widest">Base Medical Stats</p>
+                        
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Age</label>
+                                    <input type="number" value={age} onChange={e => setAge(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Blood Type</label>
+                                    <select value={bloodType} onChange={e => setBloodType(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer">
+                                        <option value="">N/A</option>
+                                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bt => <option key={bt} value={bt}>{bt}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Date of Birth</label>
+                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Insurance Provider</label>
+                                <input value={insurance} onChange={e => setInsurance(e.target.value)} placeholder="e.g. BlueCross BlueShield" className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Emergency Contact */}
+                <Card className="lg:col-span-2 border-0 shadow-card p-8 rounded-[2.5rem] bg-white ring-1 ring-slate-100">
+                    <h3 className="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+                        <HiOutlineExclamationTriangle className="text-orange-500" /> Emergency Contact
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-widest">In case of clinical urgencies</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Contact Full Name</label>
+                                <input value={emergency.name} onChange={e => setEmergency({...emergency, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Relationship</label>
+                                <input value={emergency.relation} onChange={e => setEmergency({...emergency, relation: e.target.value})} placeholder="Spouse, Parent, etc." className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Direct Phone Line</label>
+                                <div className="relative group">
+                                    <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={14} />
+                                    <input value={emergency.phone} onChange={e => setEmergency({...emergency, phone: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
+                                </div>
+                            </div>
+                            <div className="bg-emerald-50 rounded-2xl p-4 flex items-start gap-3">
+                                <FiCheckCircle className="text-emerald-500 mt-1 shrink-0" />
+                                <p className="text-[11px] font-bold text-emerald-700 leading-relaxed">
+                                    Keeping an emergency contact updated ensures our clinical staff can react quickly during unforeseen medical events.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
 
             {/* Self-Filled Health Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

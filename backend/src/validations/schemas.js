@@ -52,8 +52,15 @@ const profileValidations = {
       phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
       address: Joi.string().max(200).allow('', null),
       age: Joi.number().min(0).max(120),
+      dob: Joi.date().iso().allow('', null),
       bloodType: Joi.string().max(10).allow('', null),
-      gender: Joi.string().valid('male', 'female', 'other')
+      gender: Joi.string().valid('male', 'female', 'other'),
+      insuranceProvider: Joi.string().max(100).allow('', null),
+      emergencyContact: Joi.object({
+        name: Joi.string().max(100).allow('', null),
+        phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
+        relation: Joi.string().max(50).allow('', null)
+      }).unknown(true)
     })
   }).min(1),
 
@@ -81,13 +88,14 @@ const profileValidations = {
   }).unknown(true),
 
   updateAvailability: Joi.object({
-    availableDays: Joi.array().items(Joi.string().valid('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
-    timeSlots: Joi.array().items(Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)),
-    workingHours: Joi.object({
-      start: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-      end: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
-    })
-  }).min(1)
+    days: Joi.array().items(Joi.object().unknown(true)),
+    availableDays: Joi.array().items(Joi.string()),
+    slotDuration: Joi.number().allow(null, '', 0),
+    bufferTime: Joi.number().allow(null, '', 0),
+    maxDaily: Joi.number().allow(null, '', 0),
+    emergency: Joi.boolean(),
+    workingHours: Joi.any()
+  }).min(1).unknown(true)
 };
 
 module.exports = {

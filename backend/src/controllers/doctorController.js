@@ -7,9 +7,15 @@ const DoctorAvailability = require('../models/DoctorAvailability');
 // @route   GET /api/doctor/profile
 // @access  Private/Doctor
 exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
+  const doctor = await User.findById(req.user.id).select('-password -refreshToken');
+  const availability = await DoctorAvailability.findOne({ doctorId: req.user.id });
+
   res.status(200).json({
     success: true,
-    data: profile
+    data: {
+      ...doctor.toObject(),
+      availability: availability || null
+    }
   });
 });
 
@@ -20,7 +26,7 @@ exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
  */
 exports.getDoctorById = asyncHandler(async (req, res, next) => {
   const doctor = await User.findOne({ _id: req.params.id, role: 'doctor' }).select('-password -refreshToken');
-  
+
   if (!doctor) {
     return res.status(404).json({ success: false, message: 'Doctor not found' });
   }
@@ -77,32 +83,32 @@ exports.getDoctorDashboard = asyncHandler(async (req, res, next) => {
   const totalPatients = await Appointment.distinct('patientId', { doctorId, status: 'confirmed' });
   const totalAppointments = await Appointment.countDocuments({ doctorId });
   const pendingRequests = await Appointment.countDocuments({ doctorId, status: 'pending' });
-  
+
   // Today's appointments (with full patient details)
   const startOfDay = new Date();
-  startOfDay.setHours(0,0,0,0);
+  startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date();
-  endOfDay.setHours(23,59,59,999);
+  endOfDay.setHours(23, 59, 59, 999);
 
   const todayAppointments = await Appointment.find({
     doctorId,
     date: { $gte: startOfDay, $lte: endOfDay }
   })
-  .populate('patientId', 'name email profileImage profileData')
-  .sort({ date: 1 });
+    .populate('patientId', 'name email profileImage profileData')
+    .sort({ date: 1 });
 
   // Upcoming appointments (next 7 days, excluding today)
   const sevenDaysFromNow = new Date();
   sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-  
+
   const upcomingAppointments = await Appointment.find({
     doctorId,
     date: { $gt: endOfDay, $lte: sevenDaysFromNow },
     status: 'confirmed'
   })
-  .populate('patientId', 'name email profileImage')
-  .sort({ date: 1 })
-  .limit(5);
+    .populate('patientId', 'name email profileImage')
+    .sort({ date: 1 })
+    .limit(5);
 
   res.status(200).json({
     success: true,
@@ -124,15 +130,15 @@ exports.getDoctorDashboard = asyncHandler(async (req, res, next) => {
 // @access  Private/Doctor
 exports.getDoctorPatients = asyncHandler(async (req, res, next) => {
   const doctorId = req.user.id;
-  
+
   // Find all confirmed appointments for this doctor to identify "active" patients
   const appointments = await Appointment.find({ doctorId, status: 'confirmed' })
     .populate('patientId', 'name email profileImage profileData createdAt')
     .sort({ date: -1 });
-  
+
   // Map to unique patients with their last appointment date
   const patientMap = new Map();
-  
+
   appointments.forEach(app => {
     if (app.patientId && !patientMap.has(app.patientId._id.toString())) {
       patientMap.set(app.patientId._id.toString(), {
@@ -157,27 +163,31 @@ exports.getDoctorPatients = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Get/Update doctor availability
-// @route   GET/PUT /api/doctor/availability
-// @access  Private/Doctor
+/**
+ * @desc    Get/Update doctor availability
+ * @route   PUT /api/doctor/availability
+ * @access  Private/Doctor
+ */
 exports.updateAvailability = asyncHandler(async (req, res, next) => {
-  const { availableDays, timeSlots, workingHours } = req.body;
+  const { days, slotDuration, bufferTime, maxDaily, emergency } = req.body;
   const doctorId = req.user.id;
 
   let availability = await DoctorAvailability.findOne({ doctorId });
 
+  const payload = {
+    doctorId,
+    days,
+    slotDuration: slotDuration ? Number(slotDuration) : undefined,
+    bufferTime: bufferTime ? Number(bufferTime) : undefined,
+    maxDaily: maxDaily ? Number(maxDaily) : undefined,
+    emergency: emergency !== undefined ? emergency : undefined
+  };
+
   if (availability) {
-    availability.availableDays = availableDays || availability.availableDays;
-    availability.timeSlots = timeSlots || availability.timeSlots;
-    availability.workingHours = workingHours || availability.workingHours;
+    Object.assign(availability, payload);
     await availability.save();
   } else {
-    availability = await DoctorAvailability.create({
-      doctorId,
-      availableDays,
-      timeSlots,
-      workingHours
-    });
+    availability = await DoctorAvailability.create(payload);
   }
 
   res.status(200).json({
@@ -188,7 +198,7 @@ exports.updateAvailability = asyncHandler(async (req, res, next) => {
 
 exports.getAvailability = asyncHandler(async (req, res, next) => {
   const availability = await DoctorAvailability.findOne({ doctorId: req.user.id });
-  
+
   res.status(200).json({
     success: true,
     data: availability || {}

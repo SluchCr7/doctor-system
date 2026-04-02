@@ -26,9 +26,9 @@ export default function PatientProfileForDoctor() {
         const fetchData = async () => {
             try {
                 const [patientRes, medicalRes, apptRes] = await Promise.all([
-                    api.get(`/api/patient/${id}`),
-                    api.get(`/api/medical?patientId=${id}`), // Need filter in backend
-                    api.get(`/api/appointments?patientId=${id}`)
+                    api.get(`/patient/${id}`),
+                    api.get(`/medical?patientId=${id}`), 
+                    api.get(`/appointments?patientId=${id}`)
                 ]);
 
                 if (patientRes.data.success) setPatient(patientRes.data.data);

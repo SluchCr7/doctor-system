@@ -16,8 +16,8 @@ router.use(protect);
 
 router.post('/', validate(appointmentValidations.create), bookAppointment);
 router.get('/', getAppointments);
-router.patch('/:id/accept', authorize('doctor'), acceptAppointment);
-router.patch('/:id/reject', authorize('doctor'), rejectAppointment);
+router.patch('/:id/accept', authorize('doctor', 'admin'), acceptAppointment);
+router.patch('/:id/reject', authorize('doctor', 'admin'), rejectAppointment);
 router.patch('/:id', validate(appointmentValidations.update), updateAppointment);
 router.delete('/:id', deleteAppointment);
 

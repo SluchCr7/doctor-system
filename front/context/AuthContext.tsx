@@ -12,6 +12,7 @@ interface User {
   role: 'patient' | 'doctor' | 'admin';
   profileImage?: string;
   profileData?: any;
+  theme?: string;
 }
 
 interface AuthContextType {
@@ -22,6 +23,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   updateProfile: (data: any) => Promise<void>;
+  updateAvailability: (data: any) => Promise<void>;
   uploadProfileImage: (file: File) => Promise<void>;
   uploadClinicImage: (file: File) => Promise<void>;
 }
@@ -106,6 +108,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateAvailability = async (data: any) => {
+    try {
+      setLoading(true);
+      const response = await api.put('/doctor/availability', data);
+      if (response.data.success) {
+        const resMe = await api.get('/auth/me');
+        if (resMe.data.success) {
+          setUser(resMe.data.data);
+        }
+        toast.success('Availability schedule updated!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Availability update failed');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const uploadProfileImage = async (file: File) => {
     try {
       setLoading(true);
@@ -166,7 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, updateProfile, uploadProfileImage, uploadClinicImage }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, updateProfile, updateAvailability, uploadProfileImage, uploadClinicImage }}>
       {children}
     </AuthContext.Provider>
   );

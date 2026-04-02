@@ -3,7 +3,7 @@ const User = require('../models/User');
 const sendTokenResponse = require('../utils/sendTokenResponse');
 const { verifyRefreshToken } = require('../utils/tokenUtils');
 const bcrypt = require('bcryptjs');
-const cloudinary = require('../utils/cloudinary');
+const { cloudinary, getPublicIdFromUrl, deleteFromCloudinary } = require('../utils/cloudinary');
 const fs = require('fs');
 
 // @desc    Register user
@@ -83,10 +83,23 @@ exports.logout = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
+  
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  const userData = user.toObject();
+  
+  // If doctor, attach availability
+  if (user.role === 'doctor') {
+    const DoctorAvailability = require('../models/DoctorAvailability');
+    const availability = await DoctorAvailability.findOne({ doctorId: user.id });
+    userData.availability = availability || null;
+  }
 
   res.status(200).json({
     success: true,
-    data: user
+    data: userData
   });
 });
 
@@ -201,6 +214,10 @@ exports.uploadProfileImage = asyncHandler(async (req, res, next) => {
     };
 
     const result = await uploadFromBuffer(req.file.buffer);
+    
+    // Find user to get old image
+    const oldUser = await User.findById(req.user.id);
+    const oldImagePublicId = getPublicIdFromUrl(oldUser?.profileImage);
 
     // Update user profile
     const user = await User.findByIdAndUpdate(
@@ -211,6 +228,11 @@ exports.uploadProfileImage = asyncHandler(async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Delete old image from Cloudinary (ONLY if not a placeholder)
+    if (oldImagePublicId && !oldUser.profileImage.includes('pixabay') && !oldUser.profileImage.includes('dicebear')) {
+      await deleteFromCloudinary(oldImagePublicId);
     }
 
     const userData = user.toObject();
@@ -264,6 +286,9 @@ exports.uploadClinicImage = asyncHandler(async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Only doctor accounts can have clinic images' });
     }
 
+    // Get old clinic image public ID
+    const oldClinicImagePublicId = getPublicIdFromUrl(user.profileData?.clinicImage);
+
     if (!user.profileData) {
       user.profileData = {};
     }
@@ -272,6 +297,11 @@ exports.uploadClinicImage = asyncHandler(async (req, res, next) => {
     user.markModified('profileData');
     
     await user.save({ validateBeforeSave: false });
+
+    // Delete old clinical image (ONLY if not a placeholder)
+    if (oldClinicImagePublicId && !user.profileData?.clinicImage?.includes('pixabay')) {
+       await deleteFromCloudinary(oldClinicImagePublicId);
+    }
 
     const userData = user.toObject();
     userData.id = userData._id;
@@ -285,4 +315,31 @@ exports.uploadClinicImage = asyncHandler(async (req, res, next) => {
     console.error('Clinic Upload Error:', err);
     return res.status(500).json({ success: false, message: `Clinic image upload failed: ${err.message}` });
   }
+});
+
+// @desc    Update and persist theme preference
+// @route   PATCH /api/auth/theme
+// @access  Private
+exports.updateThemePreference = asyncHandler(async (req, res, next) => {
+  const { theme } = req.body;
+
+  if (!theme || !['light', 'dark'].includes(theme)) {
+    return res.status(400).json({ success: false, message: 'Invalid theme specified. Choose light or dark.' });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { theme },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: `Theme updated to ${theme} successfully`,
+    data: { theme: user.theme }
+  });
 });

@@ -6,14 +6,14 @@ const validate = require('../middleware/validate');
 const { profileValidations } = require('../validations/schemas');
 
 router.use(protect);
-router.use(authorize('patient', 'admin'));
 
-router.get('/profile', getPatientProfile);
-router.put('/profile', validate(profileValidations.updatePatient), updatePatientProfile);
-router.get('/dashboard', getPatientDashboard);
-router.get('/doctors', getAllDoctors);
+// Patient specific routes
+router.get('/profile', authorize('patient', 'admin'), getPatientProfile);
+router.put('/profile', authorize('patient', 'admin'), validate(profileValidations.updatePatient), updatePatientProfile);
+router.get('/dashboard', authorize('patient', 'admin'), getPatientDashboard);
+router.get('/doctors', authorize('patient', 'doctor', 'admin'), getAllDoctors);
 
-// Doctors/Admins only
+// Doctors/Admins search for specifically identified patients
 router.get('/:id', authorize('doctor', 'admin'), getPatientById);
 
 module.exports = router;

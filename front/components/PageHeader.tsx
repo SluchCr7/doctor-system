@@ -14,19 +14,19 @@ export const PageHeader = ({ title, subtitle, breadcrumbs, action }: PageHeaderP
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="space-y-1">
                 {breadcrumbs && (
-                    <nav className="flex items-center gap-2 text-sm text-slate-500 mb-2">
+                    <nav className="flex items-center gap-2 text-sm text-text-secondary mb-2">
                         {breadcrumbs.map((crumb, index) => (
                             <React.Fragment key={index}>
-                                {index > 0 && <HiOutlineChevronRight className="w-3 h-3 text-slate-400" />}
-                                <span className={index === breadcrumbs.length - 1 ? "text-slate-800 font-medium" : "text-slate-500"}>
+                                {index > 0 && <HiOutlineChevronRight className="w-3 h-3 text-text-tertiary" />}
+                                <span className={index === breadcrumbs.length - 1 ? "text-text-primary font-medium" : "text-text-secondary"}>
                                     {crumb.label}
                                 </span>
                             </React.Fragment>
                         ))}
                     </nav>
                 )}
-                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{title}</h1>
-                {subtitle && <p className="text-slate-500">{subtitle}</p>}
+                <h1 className="text-2xl font-bold text-text-primary tracking-tight">{title}</h1>
+                {subtitle && <p className="text-text-secondary">{subtitle}</p>}
             </div>
 
             {action && (

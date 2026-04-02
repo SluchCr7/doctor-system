@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { 
   HiOutlineMagnifyingGlass, 
-  HiOutlineCalendar, 
   HiOutlineChevronDown, 
   HiOutlineArrowRightOnRectangle, 
   HiOutlineCog6Tooth,
   HiOutlineUser
 } from 'react-icons/hi2';
 import NotificationBell from './dashboard/NotificationBell';
+import ThemeToggle from './ThemeToggle';
 import { useModal } from '@/context/ModalContext';
 
 const Topbar = () => {
@@ -33,10 +33,10 @@ const Topbar = () => {
   if (!user) return null;
 
   return (
-    <header className="h-24 bg-white/70 backdrop-blur-xl border-b border-slate-50 sticky top-0 z-[50] px-8 flex items-center justify-between">
+    <header className="h-24 bg-surface/70 backdrop-blur-xl border-b border-border-subtle sticky top-0 z-[50] px-8 flex items-center justify-between transition-colors duration-300">
       {/* Dynamic Breadcrumb / Context */}
       <div className="flex-1">
-        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest bg-slate-50 inline-block px-3 py-1 rounded-lg border border-slate-100">
+        <h2 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em] bg-background-subtle inline-block px-4 py-1.5 rounded-full border border-border-subtle">
           Main Dashboard
         </h2>
       </div>
@@ -46,61 +46,74 @@ const Topbar = () => {
         {/* Search */}
         <button 
           onClick={() => openModal('QUICK_SEARCH')}
-          className="hidden lg:flex items-center gap-6 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 group hover:bg-white hover:shadow-lg transition-all"
+          className="hidden lg:flex items-center gap-6 bg-background-subtle border border-border-subtle rounded-2xl px-5 py-3 group hover:bg-surface hover:shadow-premium transition-all duration-300"
         >
           <div className="flex items-center gap-3">
-             <HiOutlineMagnifyingGlass className="text-slate-400 group-hover:text-primary transition-colors" size={18} />
-             <span className="text-sm font-bold text-slate-400">Search clinical records...</span>
+             <HiOutlineMagnifyingGlass className="text-text-tertiary group-hover:text-primary transition-colors" size={18} />
+             <span className="text-sm font-bold text-text-tertiary group-hover:text-text-primary transition-colors">Search clinical records...</span>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-lg text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-100">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-surface rounded-lg text-text-tertiary text-[10px] font-black uppercase tracking-widest border border-border-subtle">
              ⌘ K
           </div>
         </button>
 
-        {/* Real-time Notifications */}
-        <NotificationBell />
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
-        <div className="w-px h-10 bg-slate-100" />
+          {/* Real-time Notifications */}
+          <NotificationBell />
+        </div>
+
+        <div className="w-px h-10 bg-border-subtle" />
 
         {/* Profile */}
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-4 bg-slate-50/50 hover:bg-slate-50 p-1.5 pr-4 rounded-2xl border border-slate-100 transition-all group lg:min-w-[180px]"
+            className="flex items-center gap-4 bg-background-subtle/50 hover:bg-background-subtle p-1.5 pr-5 rounded-2xl border border-border-subtle transition-all group lg:min-w-[190px]"
           >
-            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary font-bold border border-slate-100">
+            <div className="w-11 h-11 rounded-xl bg-surface shadow-sm flex items-center justify-center text-primary font-black border border-border-subtle">
               {user.name.charAt(0)}
             </div>
             <div className="hidden lg:block text-left">
-              <p className="text-sm font-bold text-slate-800 leading-none">{user.name.split(' ')[0]}</p>
-              <p className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">{user.role}</p>
+              <p className="text-sm font-black text-text-primary leading-none">{user.name.split(' ')[0]}</p>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.1em] mt-1.5 opacity-80">{user.role}</p>
             </div>
-            <HiOutlineChevronDown className={`ml-auto text-slate-400 transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} size={14} />
+            <HiOutlineChevronDown className={`ml-auto text-text-tertiary transition-transform duration-500 ${profileOpen ? 'rotate-180' : ''}`} size={14} />
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-full mt-4 w-64 bg-white rounded-[2rem] border border-slate-50 shadow-2xl shadow-slate-200/50 py-3 z-[100] animate-in fade-in zoom-in duration-200">
-              <div className="px-6 py-4 border-b border-slate-50 mb-2">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Signed in as</p>
-                <p className="font-bold text-slate-900 truncate">{user.email}</p>
+            <div className="absolute right-0 top-full mt-4 w-72 bg-surface rounded-[2.5rem] border border-border-subtle shadow-modal py-4 z-[100] animate-fade-in divide-y divide-border-subtle overflow-hidden">
+              <div className="px-8 py-5 border-b border-border-subtle bg-background-subtle/30">
+                <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em] mb-2">Signed in as</p>
+                <p className="font-bold text-text-primary truncate">{user.email}</p>
               </div>
               
-              <Link href="/settings" className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors">
-                <HiOutlineCog6Tooth size={18} />
-                System Settings
-              </Link>
-              
-              <Link href="/settings/personal" className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors">
-                <HiOutlineUser size={18} />
-                Profile Settings
-              </Link>
+              <div className="py-2">
+                <Link href="/settings" className="flex items-center gap-4 px-8 py-4 text-sm font-bold text-text-secondary hover:bg-background-subtle hover:text-primary transition-all group">
+                  <div className="w-8 h-8 rounded-lg bg-background-subtle flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                    <HiOutlineCog6Tooth size={18} />
+                  </div>
+                  System Settings
+                </Link>
+                
+                <Link href="/settings/personal" className="flex items-center gap-4 px-8 py-4 text-sm font-bold text-text-secondary hover:bg-background-subtle hover:text-primary transition-all group">
+                  <div className="w-8 h-8 rounded-lg bg-background-subtle flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                    <HiOutlineUser size={18} />
+                  </div>
+                  Profile Settings
+                </Link>
+              </div>
 
-              <div className="mt-3 pt-3 border-t border-slate-50">
+              <div className="py-2">
                 <button 
                   onClick={logout}
-                  className="w-full flex items-center gap-3 px-6 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 transition-colors"
+                  className="w-full flex items-center gap-4 px-8 py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 transition-all group"
                 >
-                  <HiOutlineArrowRightOnRectangle size={18} />
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
+                    <HiOutlineArrowRightOnRectangle size={18} />
+                  </div>
                   Terminate Session
                 </button>
               </div>

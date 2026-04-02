@@ -54,7 +54,14 @@ const UserSchema = new mongoose.Schema({
     consultationFee: Number,
     // Patient-specific
     age: Number,
-    bloodType: String
+    dob: Date,
+    bloodType: String,
+    insuranceProvider: String,
+    emergencyContact: {
+      name: String,
+      phone: String,
+      relation: String
+    }
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
@@ -63,7 +70,12 @@ const UserSchema = new mongoose.Schema({
     default: false
   },
   emailVerificationToken: String,
-  refreshToken: String
+  refreshToken: String,
+  theme: {
+    type: String,
+    enum: ['light', 'dark'],
+    default: 'light'
+  }
 }, {
   timestamps: true
 });

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout, getMe, refreshToken, forgotPassword, getAllUsers, uploadProfileImage, uploadClinicImage } = require('../controllers/authController');
+const { register, login, logout, getMe, refreshToken, forgotPassword, getAllUsers, uploadProfileImage, uploadClinicImage, updateThemePreference } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { authValidations } = require('../validations/schemas');
@@ -15,4 +15,6 @@ router.post('/refresh-token', refreshToken);
 router.get('/all-users', getAllUsers);
 router.post('/profile-image', protect, upload.single('image'), uploadProfileImage);
 router.post('/clinic-image', protect, upload.single('image'), uploadClinicImage);
+router.patch('/theme', protect, updateThemePreference);
+
 module.exports = router;

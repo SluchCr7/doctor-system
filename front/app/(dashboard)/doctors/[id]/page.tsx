@@ -19,7 +19,7 @@ export default function DoctorPublicProfile() {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const res = await api.get(`/api/doctor/${id}`);
+                const res = await api.get(`/doctor/${id}`);
                 if (res.data.success) {
                     setDoctor(res.data.data);
                 }
@@ -168,11 +168,12 @@ export default function DoctorPublicProfile() {
                         <CardContent className="p-8">
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                                    const available = doctor.availability?.availableDays?.includes(day);
+                                    const dayData = doctor.availability?.days?.find((d: any) => d.name === day);
+                                    const available = dayData?.active;
                                     return (
                                         <div key={day} className={`p-4 rounded-2xl border text-center transition-all ${available ? 'bg-primary/5 border-primary/10 shadow-lg shadow-primary/5' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
                                             <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${available ? 'text-primary' : 'text-slate-400'}`}>{day.slice(0,3)}</p>
-                                            <p className={`text-xs font-black ${available ? 'text-slate-900' : 'text-slate-300'}`}>{available ? (doctor.availability.workingHours?.start || '09:00') : 'OFF'}</p>
+                                            <p className={`text-xs font-black ${available ? 'text-slate-900' : 'text-slate-300'}`}>{available ? (dayData.from || '09:00') : 'OFF'}</p>
                                         </div>
                                     );
                                 })}

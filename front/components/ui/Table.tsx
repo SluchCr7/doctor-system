@@ -2,7 +2,7 @@ import React from "react";
 
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
     ({ className = "", ...props }, ref) => (
-        <div className="relative w-full overflow-auto rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative w-full overflow-auto rounded-xl border border-border shadow-sm">
             <table
                 ref={ref}
                 className={`w-full caption-bottom text-sm text-left ${className}`}
@@ -15,7 +15,7 @@ Table.displayName = "Table";
 
 export const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
     ({ className = "", ...props }, ref) => (
-        <thead ref={ref} className={`bg-slate-50 border-b border-slate-200 ${className}`} {...props} />
+        <thead ref={ref} className={`bg-background-subtle border-b border-border ${className}`} {...props} />
     )
 );
 TableHeader.displayName = "TableHeader";
@@ -35,7 +35,7 @@ export const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttribut
     ({ className = "", ...props }, ref) => (
         <tr
             ref={ref}
-            className={`border-b border-slate-100 transition-colors hover:bg-slate-50/50 data-[state=selected]:bg-slate-100 ${className}`}
+            className={`border-b border-border-subtle transition-colors hover:bg-background-subtle/50 data-[state=selected]:bg-background-subtle ${className}`}
             {...props}
         />
     )
@@ -46,7 +46,7 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
     ({ className = "", ...props }, ref) => (
         <th
             ref={ref}
-            className={`h-11 px-6 text-left align-middle font-semibold text-slate-500 [&:has([role=checkbox])]:pr-0 ${className}`}
+            className={`h-11 px-6 text-left align-middle font-semibold text-text-secondary [&:has([role=checkbox])]:pr-0 ${className}`}
             {...props}
         />
     )
@@ -57,7 +57,7 @@ export const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttr
     ({ className = "", ...props }, ref) => (
         <td
             ref={ref}
-            className={`p-6 align-middle [&:has([role=checkbox])]:pr-0 text-slate-700 ${className}`}
+            className={`p-6 align-middle [&:has([role=checkbox])]:pr-0 text-text-primary ${className}`}
             {...props}
         />
     )

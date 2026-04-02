@@ -1,24 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
   User, Mail, Phone, MapPin, Camera, Save,
-  Briefcase, GraduationCap, Calendar, Droplet,
-  Users, Building2, DollarSign, Globe, Clock,
-  Stethoscope, HeartPulse, X, Plus
+  Users, Globe, FileText, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-type Tab = 'personal' | 'professional' | 'clinic' | 'medical';
+import { Button } from '@/components/ui/Button';
 
 export default function PersonalInfoSettings() {
   const { user, loading: authLoading, updateProfile, uploadProfileImage } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<Tab>('personal');
   const [saving, setSaving] = useState(false);
-  const [langInput, setLangInput] = useState('');
-
   const [formData, setFormData] = useState({
     name: '',
     profileImage: '',
@@ -26,16 +21,7 @@ export default function PersonalInfoSettings() {
       phone: '',
       address: '',
       gender: 'male' as 'male' | 'female' | 'other',
-      specialization: '',
-      qualifications: '',
-      experience: '',
       bio: '',
-      languages: [] as string[],
-      clinicName: '',
-      clinicAddress: '',
-      consultationFee: '',
-      age: '',
-      bloodType: '',
     }
   });
 
@@ -48,16 +34,7 @@ export default function PersonalInfoSettings() {
           phone: user.profileData?.phone || '',
           address: user.profileData?.address || '',
           gender: user.profileData?.gender || 'male',
-          specialization: user.profileData?.specialization || '',
-          qualifications: user.profileData?.qualifications || '',
-          experience: user.profileData?.experience ?? '',
           bio: user.profileData?.bio || '',
-          languages: user.profileData?.languages || [],
-          clinicName: user.profileData?.clinicName || '',
-          clinicAddress: user.profileData?.clinicAddress || '',
-          consultationFee: user.profileData?.consultationFee ?? '',
-          age: user.profileData?.age ?? '',
-          bloodType: user.profileData?.bloodType || '',
         }
       });
     }
@@ -67,7 +44,7 @@ export default function PersonalInfoSettings() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    if (['name', 'profileImage'].includes(name)) {
+    if (name === 'name') {
       setFormData(prev => ({ ...prev, [name]: value }));
     } else {
       setFormData(prev => ({
@@ -77,42 +54,9 @@ export default function PersonalInfoSettings() {
     }
   };
 
-  const addLanguage = () => {
-    const lang = langInput.trim();
-    if (!lang) return;
-    if (formData.profileData.languages.includes(lang)) {
-      toast.error('Language already added');
-      return;
-    }
-    setFormData(prev => ({
-      ...prev,
-      profileData: {
-        ...prev.profileData,
-        languages: [...prev.profileData.languages, lang]
-      }
-    }));
-    setLangInput('');
-  };
-
-  const removeLanguage = (lang: string) => {
-    setFormData(prev => ({
-      ...prev,
-      profileData: {
-        ...prev.profileData,
-        languages: prev.profileData.languages.filter(l => l !== lang)
-      }
-    }));
-  };
-
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, profileImage: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-
       try {
         await uploadProfileImage(file);
       } catch (err) {
@@ -125,35 +69,15 @@ export default function PersonalInfoSettings() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload: any = {
+      await updateProfile({
         name: formData.name,
-        profileImage: (formData.profileImage && !formData.profileImage.startsWith('data:image')) ? formData.profileImage : undefined,
         profileData: {
           phone: formData.profileData.phone || undefined,
           address: formData.profileData.address || undefined,
           gender: formData.profileData.gender || undefined,
-        }
-      };
-
-      if (user?.role === 'doctor') {
-        Object.assign(payload.profileData, {
-          specialization: formData.profileData.specialization || undefined,
-          qualifications: formData.profileData.qualifications || undefined,
-          experience: formData.profileData.experience !== '' ? Number(formData.profileData.experience) : undefined,
           bio: formData.profileData.bio || undefined,
-          languages: formData.profileData.languages.length ? formData.profileData.languages : undefined,
-          clinicName: formData.profileData.clinicName || undefined,
-          clinicAddress: formData.profileData.clinicAddress || undefined,
-          consultationFee: formData.profileData.consultationFee !== '' ? Number(formData.profileData.consultationFee) : undefined,
-        });
-      } else if (user?.role === 'patient') {
-        Object.assign(payload.profileData, {
-          age: formData.profileData.age !== '' ? Number(formData.profileData.age) : undefined,
-          bloodType: formData.profileData.bloodType || undefined,
-        });
-      }
-
-      await updateProfile(payload);
+        }
+      });
     } catch (error: any) {
       console.error(error);
     } finally {
@@ -163,267 +87,160 @@ export default function PersonalInfoSettings() {
 
   if (!user) return null;
 
-  const isDoctor = user.role === 'doctor';
-
-  const tabs: { id: Tab; label: string; icon: React.ReactNode; show: boolean }[] = [
-    { id: 'personal' as Tab, label: 'Personal Info', icon: <User size={16} />, show: true },
-    { id: 'professional' as Tab, label: 'Professional', icon: <Stethoscope size={16} />, show: isDoctor },
-    { id: 'clinic' as Tab, label: 'Clinic Details', icon: <Building2 size={16} />, show: isDoctor },
-    { id: 'medical' as Tab, label: 'Medical Info', icon: <HeartPulse size={16} />, show: !isDoctor },
-  ].filter(t => t.show);
-
   const InputField = ({
-    label, name, value, placeholder = '', type = 'text', icon, disabled = false,
-    onChange
+    label, name, value, placeholder = '', type = 'text', icon: Icon, disabled = false,
   }: {
     label: string; name: string; value: string | number; placeholder?: string;
-    type?: string; icon?: React.ReactNode; disabled?: boolean;
-    onChange?: React.ChangeEventHandler<HTMLInputElement>;
+    type?: string; icon?: any; disabled?: boolean;
   }) => (
     <div className="space-y-2">
-      <label className="text-sm font-semibold text-slate-600">{label}</label>
-      <div className="relative">
-        {icon && (
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
+      <div className="relative group">
+        {Icon && (
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
         )}
         <input
           name={name}
           value={value as string}
-          onChange={onChange || handleChange}
+          onChange={handleChange}
           type={type}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full ${icon ? 'pl-10' : 'px-4'} pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400 ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+          className={`w-full ${Icon ? 'pl-11' : 'px-4'} pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-800 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all placeholder:text-slate-300 ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
         />
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-6 animate-fade-in w-full">
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-          {/* Left: Avatar Card */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center text-center gap-4">
-              <div className="relative group">
-                <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg">
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 animate-in fade-in duration-700">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Profile Header Card */}
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-premium overflow-hidden">
+          <div className="h-32 bg-gradient-to-r from-primary/20 via-sky-100 to-transparent relative">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_#0ea5e9_1px,_transparent_0)] bg-[size:20px_20px]" />
+          </div>
+          
+          <div className="px-10 pb-10 relative">
+            <div className="flex flex-col md:flex-row gap-8 items-end -mt-16 relative z-10">
+              <div className="relative group p-1 bg-white rounded-[2.5rem] shadow-xl">
+                <div className="w-32 h-32 rounded-[2.2rem] overflow-hidden bg-slate-100 relative">
                   <img
-                    src={formData.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                    src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
+                  {authLoading && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
-                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-2xl transition-opacity cursor-pointer">
-                  <Camera className="text-white w-6 h-6" />
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                </label>
-              </div>
-              <div>
-                <h2 className="font-bold text-slate-900 text-lg">{user.name}</h2>
-                <span className="inline-block mt-1 text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-wider">
-                  {user.role}
-                </span>
-              </div>
-              <div className="w-full pt-3 border-t border-slate-100 space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Mail size={14} className="text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{user.email}</span>
-                </div>
-                {user.profileData?.phone && (
-                  <div className="flex items-center gap-2 text-slate-500">
-                    <Phone size={14} className="text-slate-400 flex-shrink-0" />
-                    <span>{user.profileData.phone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Profile Image URL Fallback */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Or Provide Image URL</label>
-              <input
-                name="profileImage"
-                value={formData.profileImage}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
-              />
-            </div>
-          </div>
-
-          {/* Right: Tabs + Form */}
-          <div className="lg:col-span-3 space-y-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-1.5 flex gap-1 overflow-x-auto">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
+                <button 
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 whitespace-nowrap flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === tab.id
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                    }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
                 >
-                  {tab.icon}
-                  <span>{tab.label}</span>
+                  <Camera size={18} />
                 </button>
-              ))}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handlePhotoUpload} 
+                  className="hidden" 
+                  accept="image/*"
+                />
+              </div>
+
+              <div className="flex-1 pb-2">
+                 <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">{user.name}</h1>
+                    <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-lg uppercase tracking-widest">
+                       {user.role}
+                    </span>
+                 </div>
+                 <p className="text-slate-400 font-bold text-sm tracking-wide">{user.email}</p>
+              </div>
             </div>
 
-            {/* Tab Content */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+              {/* Identity Section */}
+              <div className="space-y-6">
+                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary" /> Identity & Bio
+                 </h3>
+                 <InputField label="Full Name" name="name" value={formData.name} placeholder="Your legal name" icon={User} />
+                 
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Personal Biography</label>
+                    <textarea 
+                       name="bio"
+                       value={formData.profileData.bio}
+                       onChange={handleChange}
+                       placeholder="Tell patients or colleagues about your journey..."
+                       className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-800 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all min-h-[160px] resize-none shadow-sm"
+                    />
+                 </div>
+              </div>
 
-              {activeTab === 'personal' && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField label="Full Name" name="name" value={formData.name} placeholder="Name" icon={<User size={15} />} />
-                    <InputField label="Email Address" name="email" value={user.email} disabled icon={<Mail size={15} />} />
-                    <InputField label="Phone Number" name="phone" value={formData.profileData.phone} placeholder="+1 234 567 8900" icon={<Phone size={15} />} />
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-600">Gender</label>
-                      <div className="relative">
-                        <Users size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <select
-                          name="gender"
-                          value={formData.profileData.gender}
-                          onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
-                        >
+              {/* Contact Section */}
+              <div className="space-y-6">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-sky-500" /> Contact & Localization
+                 </h3>
+                 <InputField label="Phone Number" name="phone" value={formData.profileData.phone} placeholder="+1 (555) 000-0000" icon={Phone} />
+                 
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender Identification</label>
+                    <div className="relative group">
+                       <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                       <select 
+                         name="gender" 
+                         value={formData.profileData.gender} 
+                         onChange={handleChange}
+                         className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-800 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_1rem_center] bg-no-repeat"
+                       >
                           <option value="male">Male</option>
                           <option value="female">Female</option>
                           <option value="other">Other</option>
-                        </select>
-                      </div>
+                       </select>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-600">Address</label>
-                    <div className="relative">
-                      <MapPin size={15} className="absolute left-3.5 top-3.5 text-slate-400" />
-                      <textarea
-                        name="address"
-                        value={formData.profileData.address}
-                        onChange={handleChange}
-                        rows={3}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+                 </div>
 
-              {activeTab === 'professional' && isDoctor && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField label="Specialization" name="specialization" value={formData.profileData.specialization} icon={<Briefcase size={15} />} />
-                    <InputField label="Qualifications" name="qualifications" value={formData.profileData.qualifications} icon={<GraduationCap size={15} />} />
-                    <InputField label="Years of Experience" name="experience" type="number" value={formData.profileData.experience} icon={<Clock size={15} />} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-600">Professional Bio</label>
-                    <textarea
-                      name="bio"
-                      value={formData.profileData.bio}
-                      onChange={handleChange}
-                      rows={4}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-600">Languages Spoken</label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Globe size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          value={langInput}
-                          onChange={e => setLangInput(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addLanguage())}
-                          placeholder="Add a language..."
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={addLanguage}
-                        className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-semibold"
-                      >
-                         <Plus size={16} />
-                      </button>
-                    </div>
-                    {formData.profileData.languages.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.profileData.languages.map(lang => (
-                          <span key={lang} className="flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full">
-                            {lang}
-                            <button type="button" onClick={() => removeLanguage(lang)} className="hover:text-red-500 transition-colors">
-                              <X size={12} />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'clinic' && isDoctor && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <InputField label="Clinic / Hospital Name" name="clinicName" value={formData.profileData.clinicName} icon={<Building2 size={15} />} />
-                    </div>
-                    <InputField label="Consultation Fee ($)" name="consultationFee" type="number" value={formData.profileData.consultationFee} icon={<DollarSign size={15} />} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-600">Clinic Address</label>
-                    <textarea
-                      name="clinicAddress"
-                      value={formData.profileData.clinicAddress}
-                      onChange={handleChange}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'medical' && !isDoctor && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField label="Age" name="age" type="number" value={formData.profileData.age} icon={<Calendar size={15} />} />
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-600">Blood Type</label>
-                      <div className="relative">
-                        <Droplet size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <select
-                          name="bloodType"
-                          value={formData.profileData.bloodType}
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Address</label>
+                    <div className="relative group">
+                       <MapPin className="absolute left-4 top-4 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                       <textarea 
+                          name="address"
+                          value={formData.profileData.address}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
-                        >
-                          <option value="">Select blood type</option>
-                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bt => (
-                            <option key={bt} value={bt}>{bt}</option>
-                          ))}
-                        </select>
-                      </div>
+                          placeholder="Your residential address..."
+                          className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-800 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary focus:bg-white transition-all min-h-[100px] resize-none shadow-sm"
+                       />
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Save Button */}
-              <div className="pt-6 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={saving || authLoading}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-60"
-                >
-                  {saving ? 'Saving...' : <><Save size={16} /> Save Changes</>}
-                </button>
+                 </div>
               </div>
+            </div>
+
+            <div className="pt-10 flex justify-end gap-4">
+               <button type="button" className="px-8 py-3.5 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors">
+                  Discard
+               </button>
+               <Button 
+                type="submit"
+                disabled={saving || authLoading}
+                className="px-10 py-3.5 bg-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-primary/30 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+               >
+                 {saving ? (
+                   <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                   </>
+                 ) : (
+                   <><Save size={16} /> Save Identity Details</>
+                 )}
+               </Button>
             </div>
           </div>
         </div>

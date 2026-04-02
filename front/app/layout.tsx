@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ModalRenderer } from "@/components/modals/ModalRenderer";
 import { Toaster } from "react-hot-toast";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import HotKeyHandler from "@/components/HotKeyHandler";
 
 const inter = Inter({
@@ -24,16 +25,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased text-slate-800 bg-slate-50`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           <NotificationProvider>
-            <ModalProvider>
-              {children}
-              <ModalRenderer />
-              <HotKeyHandler />
-              <Toaster position="top-right" />
-            </ModalProvider>
+            <ThemeProvider>
+              <ModalProvider>
+                {children}
+                <ModalRenderer />
+                <HotKeyHandler />
+                <Toaster position="top-right" />
+              </ModalProvider>
+            </ThemeProvider>
           </NotificationProvider>
         </AuthProvider>
       </body>

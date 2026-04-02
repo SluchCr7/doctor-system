@@ -6,9 +6,10 @@ const Appointment = require('../models/Appointment');
 // @route   GET /api/patient/profile
 // @access  Private/Patient
 exports.getPatientProfile = asyncHandler(async (req, res, next) => {
+  const patient = await User.findById(req.user.id).select('-password -refreshToken');
   res.status(200).json({
     success: true,
-    data: profile
+    data: patient
   });
 });
 
