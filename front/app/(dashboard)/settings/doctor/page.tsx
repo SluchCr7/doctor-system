@@ -17,9 +17,31 @@ const specialties = [
     "Urology"
 ];
 
+interface FieldProps {
+    label: string;
+    name: string;
+    type?: string;
+    icon?: React.ComponentType<any>;
+    half?: boolean;
+    value?: string | number;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const Field: React.FC<FieldProps> = ({ label, name, type = "text", icon: Icon, half = false, value, onChange }) => (
+    <div className={`space-y-1.5 ${half ? "" : ""}`}>
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />}
+            <input type={type} name={name} value={value} onChange={onChange}
+                className={`w-full ${Icon ? "pl-10" : "pl-4"} pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all`}
+            />
+        </div>
+    </div>
+);
+
 const DoctorProfileSettings = () => {
     const { user, updateProfile, uploadProfileImage } = useAuth();
-    const initData = user?.profileData?.doctorProfile || {};
+    const initData = (user?.profileData?.doctorProfile || {}) as Record<string, any>;
 
     const [saved, setSaved] = useState(false);
     const [newLang, setNewLang] = useState("");
@@ -43,18 +65,7 @@ const DoctorProfileSettings = () => {
         languages: initData.languages || ["English", "French", "Arabic"],
     });
 
-    useEffect(() => {
-        if (user) {
-            setForm(prev => ({
-                ...prev,
-                name: user.name || prev.name,
-                email: user.email || prev.email,
-            }));
-        }
-        if (user?.profileData?.doctorProfile) {
-            setForm(prev => ({ ...prev, ...user.profileData.doctorProfile }));
-        }
-    }, [user]);
+    // Form updates will be handled on save, not on user changes
 
     const handle = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
         setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -74,7 +85,19 @@ const DoctorProfileSettings = () => {
             await updateProfile({
                 name: form.name,
                 profileData: {
-                    ...user?.profileData,
+                    phone: form.phone || undefined,
+                    specialization: form.specialty || undefined,
+                    qualifications: form.title || undefined,
+                    experience: parseInt(form.yearsExperience) || undefined,
+                    bio: form.bio || undefined,
+                    languages: form.languages || [],
+                    clinicName: user?.profileData?.clinicName,
+                    clinicAddress: user?.profileData?.clinicAddress,
+                    clinicPhone: user?.profileData?.clinicPhone,
+                    clinicEmail: user?.profileData?.clinicEmail,
+                    clinicImage: user?.profileData?.clinicImage,
+                    consultationFee: parseInt(form.consultFee) || undefined,
+                    // Keep doctor-specific nested data for display purposes only
                     doctorProfile: form
                 }
             });
@@ -84,18 +107,6 @@ const DoctorProfileSettings = () => {
             console.error(error);
         }
     };
-
-    const Field = ({ label, name, type = "text", icon: Icon, half = false }: any) => (
-        <div className={`space-y-1.5 ${half ? "" : ""}`}>
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />}
-                <input type={type} name={name} value={(form as any)[name]} onChange={handle}
-                    className={`w-full ${Icon ? "pl-10" : "pl-4"} pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all`}
-                />
-            </div>
-        </div>
-    );
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -136,8 +147,8 @@ const DoctorProfileSettings = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Field label="Full Name" name="name" icon={FiUser} />
-                        <Field label="Professional Title / Degrees" name="title" icon={HiOutlineAcademicCap} />
+                        <Field label="Full Name" name="name" icon={FiUser} value={form.name} onChange={handle} />
+                        <Field label="Professional Title / Degrees" name="title" icon={HiOutlineAcademicCap} value={form.title} onChange={handle} />
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Primary Specialty</label>
                             <select name="specialty" value={form.specialty} onChange={handle}
@@ -145,9 +156,9 @@ const DoctorProfileSettings = () => {
                                 {specialties.map(s => <option key={s}>{s}</option>)}
                             </select>
                         </div>
-                        <Field label="Sub-Specialty / Focus Area" name="subSpecialty" icon={FiAward} />
-                        <Field label="Years of Experience" name="yearsExperience" type="number" />
-                        <Field label="Consultation Fee (USD)" name="consultFee" type="number" />
+                        <Field label="Sub-Specialty / Focus Area" name="subSpecialty" icon={FiAward} value={form.subSpecialty} onChange={handle} />
+                        <Field label="Years of Experience" name="yearsExperience" type="number" value={form.yearsExperience} onChange={handle} />
+                        <Field label="Consultation Fee (USD)" name="consultFee" type="number" value={form.consultFee} onChange={handle} />
                     </div>
                 </div>
             </div>
@@ -158,8 +169,8 @@ const DoctorProfileSettings = () => {
                     <HiOutlineIdentification className="w-4 h-4 text-primary" /> License & Credentials
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="Medical License Number" name="licenseNumber" icon={FiBookOpen} />
-                    <Field label="NPI Number" name="npiNumber" icon={FiBookOpen} />
+                    <Field label="Medical License Number" name="licenseNumber" icon={FiBookOpen} value={form.licenseNumber} onChange={handle} />
+                    <Field label="NPI Number" name="npiNumber" icon={FiBookOpen} value={form.npiNumber} onChange={handle} />
                     <div className="md:col-span-2 space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Education & Training</label>
                         <textarea name="education" value={form.education} onChange={handle} rows={2}
@@ -179,10 +190,10 @@ const DoctorProfileSettings = () => {
                     <FiMail className="w-4 h-4 text-primary" /> Contact & Online Presence
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="Professional Email" name="email" type="email" icon={FiMail} />
-                    <Field label="Direct Phone" name="phone" icon={FiPhone} />
-                    <Field label="LinkedIn Profile" name="linkedin" icon={FiLinkedin} />
-                    <Field label="Personal Website" name="website" icon={FiGlobe} />
+                    <Field label="Professional Email" name="email" type="email" icon={FiMail} value={form.email} onChange={handle} />
+                    <Field label="Direct Phone" name="phone" icon={FiPhone} value={form.phone} onChange={handle} />
+                    <Field label="LinkedIn Profile" name="linkedin" icon={FiLinkedin} value={form.linkedin} onChange={handle} />
+                    <Field label="Personal Website" name="website" icon={FiGlobe} value={form.website} onChange={handle} />
                     <div className="md:col-span-2 space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Professional Bio</label>
                         <textarea name="bio" value={form.bio} onChange={handle} rows={4}

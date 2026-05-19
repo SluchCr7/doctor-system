@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import api from '@/context/api';
+import patientService from '@/services/patientService';
+import medicalService from '@/services/medicalService';
+import financialService from '@/services/financialService';
+import appointmentService from '@/services/appointmentService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { HiOutlineCalendar, HiOutlineMagnifyingGlass, HiOutlinePlus, HiOutlineArrowRight, HiOutlineCurrencyDollar, HiOutlineDocumentText } from 'react-icons/hi2';
@@ -21,9 +24,9 @@ export default function PatientDashboard({ user }: { user: any }) {
       try {
         setLoading(true);
         const [dashRes, medRes, finRes] = await Promise.all([
-          api.get('/patient/dashboard'),
-          api.get('/medical').catch(() => ({ data: { data: [] } })),
-          api.get('/financial/invoices').catch(() => ({ data: { data: [] } }))
+          patientService.getDashboard(),
+          medicalService.getRecords().catch(() => ({ data: { data: [] } })),
+          financialService.getInvoices().catch(() => ({ data: { data: [] } }))
         ]);
 
         if (dashRes.data.success) {
@@ -48,10 +51,10 @@ export default function PatientDashboard({ user }: { user: any }) {
       description: 'Are you sure you want to cancel this appointment session? This action cannot be reversed.',
       onConfirm: async () => {
         try {
-          await api.delete(`/appointments/${id}`);
+          await appointmentService.cancel(id);
           toast.success('Appointment cancelled successfully');
           // Refresh data
-          const res = await api.get('/patient/dashboard');
+          const res = await patientService.getDashboard();
           if (res.data.success) setData(res.data.data);
         } catch (err) {
           toast.error('Failed to cancel appointment');
@@ -124,7 +127,9 @@ export default function PatientDashboard({ user }: { user: any }) {
                     onClick={() => openModal('RESCHEDULE_APPOINTMENT', {
                       initialData: data.upcoming[0],
                       onSuccess: () => {
-                        api.get('/patient/dashboard').then(res => setData(res.data.data));
+                        patientService.getDashboard().then(res => {
+                          if (res.data.success) setData(res.data.data);
+                        });
                       }
                     })}
                   >

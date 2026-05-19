@@ -13,7 +13,7 @@ import {
     HiOutlineFunnel,
     HiOutlineUserCircle,
 } from "react-icons/hi2";
-import api from "@/context/api";
+import doctorService from "@/services/doctorService";
 import { useModal } from "@/context/ModalContext";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -39,7 +39,7 @@ const PatientsPage = () => {
     const fetchPatients = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/doctor/patients');
+            const res = await doctorService.getPatients();
             if (res.data.success) {
                 setPatients(res.data.data);
             }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getPatientProfile, updatePatientProfile, getPatientDashboard, getAllDoctors, getPatientById } = require('../controllers/patientController');
+const { getPatientProfile, updatePatientProfile, getPatientDashboard, getAllDoctors, getPatientById, updatePatientById } = require('../controllers/patientController');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { profileValidations } = require('../validations/schemas');
@@ -12,6 +12,12 @@ router.get('/profile', authorize('patient', 'admin'), getPatientProfile);
 router.put('/profile', authorize('patient', 'admin'), validate(profileValidations.updatePatient), updatePatientProfile);
 router.get('/dashboard', authorize('patient', 'admin'), getPatientDashboard);
 router.get('/doctors', authorize('patient', 'doctor', 'admin'), getAllDoctors);
+
+// Doctors/Admins can update or fetch a specific patient
+router.put('/:id', authorize('doctor', 'admin'), validate(profileValidations.updatePatient), async (req, res, next) => {
+	// forwarded to controller
+	return updatePatientById(req, res, next);
+});
 
 // Doctors/Admins search for specifically identified patients
 router.get('/:id', authorize('doctor', 'admin'), getPatientById);

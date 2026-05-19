@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { FiHeart, FiPlus, FiX, FiCheckCircle, FiAlertCircle, FiInfo, FiPhone } from "react-icons/fi";
 import { HiOutlineBeaker, HiOutlineExclamationTriangle, HiOutlineDocumentText } from "react-icons/hi2";
-import api from "@/context/api";
+import medicalService from "@/services/medicalService";
 import toast from "react-hot-toast";
 
 const commonConditions = ["Diabetes Type 2", "Hypertension", "Asthma", "Hypothyroidism", "Arthritis", "Anxiety Disorder"];
@@ -56,7 +56,7 @@ const MedicalRecordsPage = () => {
     useEffect(() => {
         const fetchRecords = async () => {
             try {
-                const res = await api.get('/api/medical');
+                const res = await medicalService.getRecords();
                 if (res.data.success) {
                     setOfficialRecords(res.data.data);
                 }

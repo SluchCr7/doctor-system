@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import api from '@/context/api';
+import patientService from '@/services/patientService';
+import medicalService from '@/services/medicalService';
+import appointmentService from '@/services/appointmentService';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -13,7 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function PatientProfileForDoctor() {
-    const { id } = useParams();
+    const params = useParams();
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
     const { user: doctor } = useAuth();
     const [patient, setPatient] = useState<any>(null);
     const [medicalHistory, setMedicalHistory] = useState<any[]>([]);
@@ -21,17 +24,24 @@ export default function PatientProfileForDoctor() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [note, setNote] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({ name: '', phone: '', address: '' });
 
     useEffect(() => {
+        if (!id) return;
         const fetchData = async () => {
             try {
                 const [patientRes, medicalRes, apptRes] = await Promise.all([
-                    api.get(`/patient/${id}`),
-                    api.get(`/medical?patientId=${id}`), 
-                    api.get(`/appointments?patientId=${id}`)
+                    patientService.getPatientById(id),
+                    medicalService.getRecords(id), 
+                    appointmentService.listByPatient(id)
                 ]);
 
                 if (patientRes.data.success) setPatient(patientRes.data.data);
+                if (patientRes.data.success) {
+                    const p = patientRes.data.data;
+                    setEditForm({ name: p.name || '', phone: p.profileData?.phone || '', address: p.profileData?.address || '' });
+                }
                 if (medicalRes.data.success) setMedicalHistory(medicalRes.data.data);
                 if (apptRes.data.success) setAppointments(apptRes.data.data);
             } catch (err) {
@@ -95,6 +105,33 @@ export default function PatientProfileForDoctor() {
 
                 <div className="flex gap-3">
                     <Button variant="primary" className="rounded-2xl font-black shadow-lg shadow-primary/20 h-12" leftIcon={<HiOutlinePencilSquare />}>New Record</Button>
+                    {doctor?.role === 'doctor' && (
+                        <>
+                            {!isEditing ? (
+                                <Button onClick={() => setIsEditing(true)} className="rounded-2xl font-black h-12">Edit Patient</Button>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <input value={editForm.name} onChange={(e) => setEditForm(s => ({ ...s, name: e.target.value }))} className="px-3 py-2 rounded-lg border" placeholder="Full name" />
+                                    <input value={editForm.phone} onChange={(e) => setEditForm(s => ({ ...s, phone: e.target.value }))} className="px-3 py-2 rounded-lg border" placeholder="Phone" />
+                                    <Button onClick={async () => {
+                                        try {
+                                            const payload: any = { name: editForm.name, profileData: { phone: editForm.phone, address: editForm.address } };
+                                            const res = await patientService.updatePatientById(id, payload);
+                                            if (res.data.success) {
+                                                setPatient(res.data.data);
+                                                setIsEditing(false);
+                                                toast.success('Patient updated');
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            toast.error('Failed to update patient');
+                                        }
+                                    }} className="rounded-2xl font-black h-12">Save</Button>
+                                    <Button variant="secondary" onClick={() => setIsEditing(false)} className="rounded-2xl h-12">Cancel</Button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
 

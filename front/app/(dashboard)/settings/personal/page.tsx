@@ -67,6 +67,15 @@ export default function PersonalInfoSettings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Client-side validation
+    const errs: string[] = [];
+    if (!formData.name || formData.name.trim().length < 2) errs.push('Full name is required');
+    if (formData.profileData.phone && !/^\+?[0-9\s-]{7,15}$/.test(formData.profileData.phone)) errs.push('Invalid phone format');
+    if (errs.length) {
+      toast.error(errs.join(' — '));
+      return;
+    }
+
     setSaving(true);
     try {
       await updateProfile({
@@ -80,6 +89,7 @@ export default function PersonalInfoSettings() {
       });
     } catch (error: any) {
       console.error(error);
+      toast.error(error.response?.data?.message || 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -91,7 +101,7 @@ export default function PersonalInfoSettings() {
     label, name, value, placeholder = '', type = 'text', icon: Icon, disabled = false,
   }: {
     label: string; name: string; value: string | number; placeholder?: string;
-    type?: string; icon?: any; disabled?: boolean;
+    type?: string; icon?: React.ComponentType<{ size: number }>; disabled?: boolean;
   }) => (
     <div className="space-y-2">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>

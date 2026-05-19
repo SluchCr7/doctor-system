@@ -23,6 +23,9 @@ const authValidations = {
   login: Joi.object({
     email: Joi.string().email().required().lowercase().trim(),
     password: Joi.string().required()
+  }),
+  resetPassword: Joi.object({
+    password: Joi.string().required().min(6).max(100)
   })
 };
 

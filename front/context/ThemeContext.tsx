@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import api from './api';
 import { useAuth } from './AuthContext';
+import themeService from '@/services/themeService';
 
 type Theme = 'light' | 'dark';
 
@@ -16,16 +16,15 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') as Theme : null;
+    const systemTheme = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return savedTheme || systemTheme;
+  });
   const [mounted, setMounted] = useState(false);
 
-  // Initial load from localStorage or system preference
+  // Mark as mounted after hydration
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    
-    const initialTheme = savedTheme || systemTheme;
-    setThemeState(initialTheme);
     setMounted(true);
   }, []);
 
@@ -52,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Persist to backend if user is logged in
     if (user) {
       try {
-        await api.patch('/auth/theme', { theme: newTheme });
+        await themeService.updateTheme(newTheme);
       } catch (error) {
         console.error('Failed to sync theme with backend:', error);
       }

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import api from '@/context/api';
+import doctorService from '@/services/doctorService';
+import appointmentService from '@/services/appointmentService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { 
@@ -24,8 +25,8 @@ export default function DoctorDashboard({ user }: { user: any }) {
   const fetchDashboard = async () => {
     try {
       const [dashRes, patientsRes] = await Promise.all([
-        api.get('/doctor/dashboard'),
-        api.get('/doctor/patients')
+        doctorService.getDashboard(),
+        doctorService.getPatients()
       ]);
       
       if (dashRes.data.success) {
@@ -48,7 +49,7 @@ export default function DoctorDashboard({ user }: { user: any }) {
 
   const handleAction = async (id: string, action: 'accept' | 'reject') => {
     try {
-      const res = await api.patch(`/appointments/${id}/${action}`);
+      const res = await appointmentService.respond(id, action);
       if (res.data.success) {
         toast.success(`Appointment ${action === 'accept' ? 'accepted' : 'rejected'}`);
         // Refresh data

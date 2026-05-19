@@ -2,17 +2,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import api from './api';
+import notificationService, { NotificationPayload } from '@/services/notificationService';
 import toast from 'react-hot-toast';
 
-interface Notification {
-  _id: string;
-  title: string;
-  message: string;
-  type: 'appointment' | 'medical_record' | 'invoice' | 'system' | 'message';
-  isRead: boolean;
-  createdAt: string;
-}
+interface Notification extends NotificationPayload {}
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -34,7 +27,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get('/api/notifications');
+      const res = await notificationService.getNotifications();
       if (res.data.success) {
         setNotifications(res.data.data);
         setUnreadCount(res.data.data.filter((n: Notification) => !n.isRead).length);
@@ -92,7 +85,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const markAsRead = async (id: string) => {
     try {
-      const res = await api.patch(`/api/notifications/${id}/read`);
+      const res = await notificationService.markAsRead(id);
       if (res.data.success) {
         setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
@@ -104,7 +97,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const markAllAsRead = async () => {
     try {
-      const res = await api.patch('/api/notifications/read-all');
+      const res = await notificationService.markAllAsRead();
       if (res.data.success) {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         setUnreadCount(0);

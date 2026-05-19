@@ -7,7 +7,8 @@ const {
   getAvailability, 
   getDoctorProfile, 
   updateDoctorProfile,
-  getDoctorById 
+  getDoctorById ,
+  searchDoctors
 } = require('../controllers/doctorController');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
@@ -26,6 +27,7 @@ router.get('/dashboard', authorize('doctor', 'admin'), getDoctorDashboard);
 router.get('/patients', authorize('doctor', 'admin'), getDoctorPatients);
 router.get('/availability', authorize('doctor', 'admin'), getAvailability);
 router.put('/availability', authorize('doctor', 'admin'), updateAvailability);
+router.get('/search', searchDoctors);
 
 // Generic ID route for public/patient viewing (Must be last to avoid catching sub-routes)
 router.get('/:id', getDoctorById);

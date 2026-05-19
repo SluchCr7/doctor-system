@@ -5,7 +5,8 @@ import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
-import api from '@/context/api';
+import patientService from '@/services/patientService';
+import appointmentService from '@/services/appointmentService';
 import toast from 'react-hot-toast';
 import { FiCalendar, FiClock, FiFileText, FiUser } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
@@ -32,7 +33,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSuccess, initialData }: BookA
     if (isOpen && user?.role === 'patient') {
       const fetchDoctors = async () => {
         try {
-          const res = await api.get('/patient/doctors');
+          const res = await patientService.getDoctors();
           if (res.data.success) {
             setDoctors(res.data.data);
             if (res.data.data.length > 0 && !formData.doctorId) {
@@ -57,13 +58,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSuccess, initialData }: BookA
       let res;
       if (initialData?._id) {
         // Reschedule
-        res = await api.patch(`/appointments/${initialData._id}`, {
+        res = await appointmentService.update(initialData._id, {
           date: fullDate,
           notes: formData.notes
         });
       } else {
         // New booking
-        res = await api.post('/appointments', {
+        res = await appointmentService.create({
           doctorId: formData.doctorId,
           date: fullDate,
           notes: formData.notes

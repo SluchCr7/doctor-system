@@ -10,19 +10,21 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
-    // If token expired (401) and it's not a retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
       try {
-        // Try to refresh token
         await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {}, { withCredentials: true });
         return api(originalRequest);
       } catch (refreshError) {
-        // Redirect to login or clear state
         console.error('Session expired');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );

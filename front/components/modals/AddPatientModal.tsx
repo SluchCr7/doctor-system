@@ -4,7 +4,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FiUser, FiPhone, FiMail, FiMapPin, FiCalendar } from "react-icons/fi";
-import api from "@/context/api";
+import userService from "@/services/userService";
 import toast from "react-hot-toast";
 
 interface PatientModalProps {
@@ -59,9 +59,6 @@ const AddPatientModal = ({ isOpen, onClose, initialData, isLoading = false, onSu
         e.preventDefault();
         setLoading(true);
         try {
-            const endpoint = isEditMode ? `/admin/users/${initialData._id}` : '/auth/register';
-            const method = isEditMode ? 'patch' : 'post';
-            
             const payload = {
                 name: formData.fullName,
                 email: formData.email || `${formData.fullName.toLowerCase().replace(/\s/g, '')}@clinic.local`,
@@ -76,7 +73,9 @@ const AddPatientModal = ({ isOpen, onClose, initialData, isLoading = false, onSu
                 }
             };
 
-            const res = await api[method](endpoint, payload);
+            const res = isEditMode 
+                ? await userService.updateUser(initialData._id, payload)
+                : await userService.registerPatient(payload);
 
             if (res.data.success) {
                 toast.success(isEditMode ? 'Patient updated' : 'Patient registered successfully');

@@ -24,6 +24,43 @@ exports.getDoctorProfile = asyncHandler(async (req, res, next) => {
  * @route   GET /api/doctor/:id
  * @access  Private
  */
+exports.searchDoctors = asyncHandler(async (req, res, next) => {
+  const query = (req.query.q || '').trim();
+
+  if (!query) {
+    return res.status(400).json({ success: false, message: 'Search query is required' });
+  }
+
+  const regex = new RegExp(query, 'i');
+
+  const doctors = await User.find({
+    role: 'doctor',
+    $or: [
+      { name: regex },
+      { email: regex },
+      { 'profileData.specialization': regex },
+      { 'profileData.clinicName': regex },
+      { 'profileData.clinicAddress': regex }
+    ]
+  })
+    .select('name email profileImage profileData')
+    .limit(10);
+
+  const results = doctors.map((doctor) => ({
+    _id: doctor._id,
+    type: 'doctor',
+    title: `Dr. ${doctor.name}`,
+    subtitle: doctor.profileData?.specialization || doctor.profileData?.clinicName || doctor.email,
+    href: `/doctors/${doctor._id}`
+  }));
+
+  res.status(200).json({
+    success: true,
+    count: results.length,
+    data: results
+  });
+});
+
 exports.getDoctorById = asyncHandler(async (req, res, next) => {
   const doctor = await User.findOne({ _id: req.params.id, role: 'doctor' }).select('-password -refreshToken');
 
@@ -48,28 +85,53 @@ exports.getDoctorById = asyncHandler(async (req, res, next) => {
 exports.updateDoctorProfile = asyncHandler(async (req, res, next) => {
   const { name, profileData, profileImage } = req.body;
 
+  if (!req.user.id) {
+    return res.status(401).json({ success: false, message: 'Unauthorized: User not found' });
+  }
+
   // Build $set payload using dot-notation so only sent fields are updated
   const setFields = {};
-  if (name) setFields.name = name;
+  if (name && name.trim()) setFields.name = name.trim();
   if (profileImage !== undefined) setFields.profileImage = profileImage;
 
   if (profileData && typeof profileData === 'object') {
     for (const [key, value] of Object.entries(profileData)) {
-      if (value !== undefined) {
-        setFields[`profileData.${key}`] = value;
+      if (value !== undefined && value !== null) {
+        // Skip nested objects that should be handled separately
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          for (const [nestedKey, nestedValue] of Object.entries(value)) {
+            if (nestedValue !== undefined && nestedValue !== null) {
+              setFields[`profileData.${key}.${nestedKey}`] = nestedValue;
+            }
+          }
+        } else {
+          setFields[`profileData.${key}`] = value;
+        }
       }
     }
+  }
+
+  if (Object.keys(setFields).length === 0) {
+    return res.status(400).json({ success: false, message: 'No valid fields to update' });
   }
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
     { $set: setFields },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true, select: '-password -refreshToken' }
   );
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'Doctor profile not found' });
+  }
+
+  const userData = user.toObject();
+  userData.id = userData._id;
 
   res.status(200).json({
     success: true,
-    data: user
+    message: 'Doctor profile updated successfully',
+    data: userData
   });
 });
 

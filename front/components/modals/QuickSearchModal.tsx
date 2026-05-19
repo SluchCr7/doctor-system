@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Search, User, Calendar, FileText, Command, ArrowRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import api from "@/context/api";
-import Link from "next/link";
+import { motion } from "framer-motion";
+import searchService from '@/services/searchService';
 
 interface QuickSearchModalProps {
   isOpen: boolean;
@@ -13,6 +13,7 @@ interface QuickSearchModalProps {
 }
 
 export default function QuickSearchModal({ isOpen, onClose }: QuickSearchModalProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export default function QuickSearchModal({ isOpen, onClose }: QuickSearchModalPr
     const delayDebounceFn = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await api.get(`/doctor/search?q=${query}`);
+        const res = await searchService.findDoctors(query);
         if (res.data.success) {
           setResults(res.data.data);
         }
@@ -65,7 +66,18 @@ export default function QuickSearchModal({ isOpen, onClose }: QuickSearchModalPr
   }, [isOpen, results, selectedIndex]);
 
   const handleItemClick = (item: any) => {
-    // Navigate based on type
+    if (item.href) {
+      onClose();
+      router.push(item.href);
+      return;
+    }
+
+    if (item.type === 'doctor') {
+      onClose();
+      router.push(`/doctors/${item._id}`);
+      return;
+    }
+
     onClose();
   };
 

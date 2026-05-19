@@ -15,6 +15,8 @@ const ClinicInfoSettings = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<Record<string,string>>({});
 
     const [form, setForm] = useState({
         clinicName: "",
@@ -64,7 +66,19 @@ const ClinicInfoSettings = () => {
     };
 
     const save = async () => {
+        setErrors({});
+        // Basic client-side validation
+        const newErrors: Record<string,string> = {};
+        if (!form.clinicName || form.clinicName.trim().length < 2) newErrors.clinicName = 'Clinic name is required';
+        if (form.clinicEmail && !/^[\w-.]+@[\w-]+\.[a-z]{2,}$/i.test(form.clinicEmail)) newErrors.clinicEmail = 'Invalid email address';
+
+        if (Object.keys(newErrors).length) {
+            setErrors(newErrors);
+            return;
+        }
+
         try {
+            setSaving(true);
             await updateProfile({
                 profileData: {
                     ...user?.profileData,
@@ -74,8 +88,10 @@ const ClinicInfoSettings = () => {
             });
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -282,7 +298,8 @@ const ClinicInfoSettings = () => {
                             </button>
                             <Button
                                 onClick={save}
-                                className="px-10 py-3.5 bg-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-primary/30 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                disabled={saving}
+                                className="px-10 py-3.5 bg-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-primary/30 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 Commmit Practice Data
                             </Button>

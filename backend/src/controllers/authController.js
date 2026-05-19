@@ -67,22 +67,28 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @route   GET /api/auth/logout
 // @access  Private
 exports.logout = asyncHandler(async (req, res, next) => {
-  res.cookie('token', 'none', {
+  const cookieOptions = {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
-  });
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  };
 
-  res.status(200).json({
-    success: true,
-    data: {}
-  });
+  res
+    .cookie('token', 'none', cookieOptions)
+    .cookie('refreshToken', 'none', cookieOptions)
+    .status(200)
+    .json({
+      success: true,
+      data: {}
+    });
 });
 
 // @desc    Get current logged in user
-// @route   POST /api/auth/me
+// @route   GET /api/auth/me
 // @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select('-password -refreshToken');
   
   if (!user) {
     return res.status(404).json({ success: false, message: 'User not found' });
@@ -107,7 +113,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 // @route   POST /api/auth/refresh-token
 // @access  Public
 exports.refreshToken = asyncHandler(async (req, res, next) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({ success: false, message: 'Refresh token mandatory' });
@@ -178,12 +184,45 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 });
 
 exports.getAllUsers = asyncHandler(async (req, res, next) => {
-  const users = await User.find();
+  const users = await User.find().select('-password -refreshToken');
   res.status(200).json({
     success: true,
     count: users.length,
     data: users
   });
+});
+
+// @desc    Reset password
+// @route   PUT /api/auth/reset-password/:resetToken
+// @access  Public
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  const resetPasswordToken = require('crypto')
+    .createHash('sha256')
+    .update(req.params.resetToken)
+    .digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() }
+  }).select('+password');
+
+  if (!user) {
+    return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+  }
+
+  const { password } = req.body;
+  if (!password || password.length < 6) {
+    return res.status(400).json({ success: false, message: 'A new password of at least 6 characters is required' });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(password, salt);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  await sendTokenResponse(user, 200, res);
 });
 
 // @desc    Upload Profile Image
@@ -216,14 +255,14 @@ exports.uploadProfileImage = asyncHandler(async (req, res, next) => {
     const result = await uploadFromBuffer(req.file.buffer);
     
     // Find user to get old image
-    const oldUser = await User.findById(req.user.id);
+    const oldUser = await User.findById(req.user.id).select('-password -refreshToken');
     const oldImagePublicId = getPublicIdFromUrl(oldUser?.profileImage);
 
     // Update user profile
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { profileImage: result.secure_url },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, select: '-password -refreshToken' }
     );
 
     if (!user) {
@@ -277,7 +316,7 @@ exports.uploadClinicImage = asyncHandler(async (req, res, next) => {
     const result = await uploadFromBuffer(req.file.buffer);
 
     // Update clinic image in user's profileData
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('-password -refreshToken');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }

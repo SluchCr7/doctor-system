@@ -45,28 +45,53 @@ exports.getPatientById = asyncHandler(async (req, res, next) => {
 exports.updatePatientProfile = asyncHandler(async (req, res, next) => {
   const { name, profileData, profileImage } = req.body;
 
+  if (!req.user.id) {
+    return res.status(401).json({ success: false, message: 'Unauthorized: User not found' });
+  }
+
   // Build $set payload using dot-notation so only sent fields are updated
   const setFields = {};
-  if (name) setFields.name = name;
+  if (name && name.trim()) setFields.name = name.trim();
   if (profileImage !== undefined) setFields.profileImage = profileImage;
 
   if (profileData && typeof profileData === 'object') {
     for (const [key, value] of Object.entries(profileData)) {
-      if (value !== undefined) {
-        setFields[`profileData.${key}`] = value;
+      if (value !== undefined && value !== null) {
+        // Skip nested objects that should be handled separately
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          for (const [nestedKey, nestedValue] of Object.entries(value)) {
+            if (nestedValue !== undefined && nestedValue !== null) {
+              setFields[`profileData.${key}.${nestedKey}`] = nestedValue;
+            }
+          }
+        } else {
+          setFields[`profileData.${key}`] = value;
+        }
       }
     }
+  }
+
+  if (Object.keys(setFields).length === 0) {
+    return res.status(400).json({ success: false, message: 'No valid fields to update' });
   }
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
     { $set: setFields },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true, select: '-password -refreshToken' }
   );
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'Patient profile not found' });
+  }
+
+  const userData = user.toObject();
+  userData.id = userData._id;
 
   res.status(200).json({
     success: true,
-    data: user
+    message: 'Patient profile updated successfully',
+    data: userData
   });
 });
 
@@ -107,5 +132,65 @@ exports.getAllDoctors = asyncHandler(async (req, res, next) => {
     success: true,
     count: doctors.length,
     data: doctors
+  });
+});
+
+// @desc    Update patient profile by ID (for doctors/admins)
+// @route   PUT /api/patient/:id
+// @access  Private/Doctor|Admin
+exports.updatePatientById = asyncHandler(async (req, res, next) => {
+  const patientId = req.params.id;
+
+  // Authorization: doctors may only update patients they have an appointment with
+  if (req.user.role === 'doctor') {
+    const hasAppointment = await Appointment.exists({ doctorId: req.user.id, patientId });
+    if (!hasAppointment) {
+      return res.status(403).json({ success: false, message: 'You are not allowed to update this patient' });
+    }
+  }
+
+  const { name, profileData, profileImage } = req.body;
+
+  const setFields = {};
+  if (name && name.trim()) setFields.name = name.trim();
+  if (profileImage !== undefined) setFields.profileImage = profileImage;
+
+  if (profileData && typeof profileData === 'object') {
+    for (const [key, value] of Object.entries(profileData)) {
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          for (const [nestedKey, nestedValue] of Object.entries(value)) {
+            if (nestedValue !== undefined && nestedValue !== null) {
+              setFields[`profileData.${key}.${nestedKey}`] = nestedValue;
+            }
+          }
+        } else {
+          setFields[`profileData.${key}`] = value;
+        }
+      }
+    }
+  }
+
+  if (Object.keys(setFields).length === 0) {
+    return res.status(400).json({ success: false, message: 'No valid fields to update' });
+  }
+
+  const user = await User.findOneAndUpdate(
+    { _id: patientId, role: 'patient' },
+    { $set: setFields },
+    { new: true, runValidators: true, select: '-password -refreshToken' }
+  );
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'Patient not found' });
+  }
+
+  const userData = user.toObject();
+  userData.id = userData._id;
+
+  res.status(200).json({
+    success: true,
+    message: 'Patient profile updated successfully',
+    data: userData
   });
 });

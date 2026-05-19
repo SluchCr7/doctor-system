@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import api from '@/context/api';
+import doctorService from '@/services/doctorService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -12,14 +12,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function DoctorPublicProfile() {
-    const { id } = useParams();
+    const params = useParams();
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
     const [doctor, setDoctor] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!id) return;
         const fetchDoctor = async () => {
             try {
-                const res = await api.get(`/doctor/${id}`);
+                const res = await doctorService.getDoctorById(id);
                 if (res.data.success) {
                     setDoctor(res.data.data);
                 }

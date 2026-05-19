@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import api from './api';
+import authService from '@/services/authService';
 import toast from 'react-hot-toast';
 
 interface User {
@@ -11,19 +11,19 @@ interface User {
   email: string;
   role: 'patient' | 'doctor' | 'admin';
   profileImage?: string;
-  profileData?: any;
+  profileData?: Record<string, any>;
   theme?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: any) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  register: (data: Record<string, any>) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
-  updateProfile: (data: any) => Promise<void>;
-  updateAvailability: (data: any) => Promise<void>;
+  updateProfile: (data: Record<string, any>) => Promise<void>;
+  updateAvailability: (data: Record<string, any>) => Promise<void>;
   uploadProfileImage: (file: File) => Promise<void>;
   uploadClinicImage: (file: File) => Promise<void>;
 }
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await api.get('/auth/me');
+        const response = await authService.me();
         if (response.data.success) {
           setUser(response.data.data);
         }
@@ -56,12 +56,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (credentials: any) => {
     try {
       setLoading(true);
-      const response = await api.post('/auth/login', credentials);
+      const response = await authService.login(credentials);
       if (response.data.success) {
         setUser(response.data.data);
         toast.success(`Welcome back, ${response.data.data.name}!`);
-
-        // Redirect to dashboard
         router.push('/');
       }
     } catch (error: any) {
@@ -75,12 +73,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (data: any) => {
     try {
       setLoading(true);
-      const response = await api.post('/auth/register', data);
+      const response = await authService.register(data);
       if (response.data.success) {
         setUser(response.data.data);
         toast.success('Registration successful!');
-
-        // Redirect to dashboard (role-specific view handled there)
         router.push('/');
       }
     } catch (error: any) {
@@ -93,15 +89,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProfile = async (data: any) => {
     try {
+      if (!user) {
+        toast.error('No user session found');
+        return;
+      }
+
       setLoading(true);
-      const endpoint = user?.role === 'doctor' ? '/doctor/profile' : '/patient/profile';
-      const response = await api.put(endpoint, data);
+      
+      // Validate data structure
+      if (!data || typeof data !== 'object') {
+        toast.error('Invalid profile data');
+        return;
+      }
+
+      const response = await authService.updateProfile(user?.role || 'patient', data);
+      
       if (response.data.success) {
         setUser(response.data.data);
-        toast.success('Profile updated successfully!');
+        toast.success(response.data.message || 'Profile updated successfully!');
+      } else {
+        toast.error(response.data.message || 'Failed to update profile');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Update failed');
+      const errorMsg = error.response?.data?.message || error.message || 'Profile update failed';
+      console.error('Profile update error:', error);
+      toast.error(errorMsg);
       throw error;
     } finally {
       setLoading(false);
@@ -110,17 +122,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateAvailability = async (data: any) => {
     try {
+      if (!user) {
+        toast.error('No user session found');
+        return;
+      }
+
       setLoading(true);
-      const response = await api.put('/doctor/availability', data);
+      
+      if (!data || typeof data !== 'object') {
+        toast.error('Invalid availability data');
+        return;
+      }
+
+      const response = await authService.updateAvailability(data);
+      
       if (response.data.success) {
-        const resMe = await api.get('/auth/me');
+        // Refresh user data to get updated availability
+        const resMe = await authService.me();
         if (resMe.data.success) {
           setUser(resMe.data.data);
         }
-        toast.success('Availability schedule updated!');
+        toast.success(response.data.message || 'Availability schedule updated!');
+      } else {
+        toast.error(response.data.message || 'Failed to update availability');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Availability update failed');
+      const errorMsg = error.response?.data?.message || error.message || 'Availability update failed';
+      console.error('Availability update error:', error);
+      toast.error(errorMsg);
       throw error;
     } finally {
       setLoading(false);
@@ -129,22 +158,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const uploadProfileImage = async (file: File) => {
     try {
-      setLoading(true);
-      const formData = new FormData();
-      // Explicitly include filename in append for better compatibility
-      formData.append('image', file, file.name);
+      if (!user) {
+        toast.error('No user session found');
+        return;
+      }
 
-      const response = await api.post('/auth/profile-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      if (!file) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      setLoading(true);
+      const response = await authService.uploadProfileImage(file);
+      
       if (response.data.success) {
         setUser(response.data.data);
         toast.success(response.data.message || 'Profile image updated!');
+      } else {
+        toast.error(response.data.message || 'Failed to upload profile image');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Image upload failed');
+      const errorMsg = error.response?.data?.message || error.message || 'Image upload failed';
+      console.error('Profile image upload error:', error);
+      toast.error(errorMsg);
       throw error;
     } finally {
       setLoading(false);
@@ -154,15 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const uploadClinicImage = async (file: File) => {
     try {
       setLoading(true);
-      const formData = new FormData();
-      // Explicitly include filename in append for better compatibility
-      formData.append('image', file, file.name);
-
-      const response = await api.post('/auth/clinic-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await authService.uploadClinicImage(file);
       if (response.data.success) {
         setUser(response.data.data);
         toast.success(response.data.message || 'Clinic image updated!');
@@ -177,7 +217,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await api.get('/auth/logout');
+      await authService.logout();
       setUser(null);
       toast.success('Logged out successfully');
       router.push('/login');

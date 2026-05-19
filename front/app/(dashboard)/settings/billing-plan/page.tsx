@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { FiCreditCard, FiCheckCircle, FiDownload, FiZap, FiInfo } from "react-icons/fi";
 import { HiOutlineSparkles, HiOutlineCurrencyDollar } from "react-icons/hi2";
-import api from "@/context/api";
+import financialService from "@/services/financialService";
 import toast from "react-hot-toast";
 
 const doctorPlans = [
@@ -44,7 +44,7 @@ const BillingSettings = () => {
     useEffect(() => {
         const fetchInvoices = async () => {
             try {
-                const res = await api.get('/api/financial/invoices');
+                const res = await financialService.getInvoices();
                 if (res.data.success) {
                     setRealInvoices(res.data.data);
                 }

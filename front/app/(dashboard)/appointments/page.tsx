@@ -15,7 +15,7 @@ import {
   HiOutlineXMark,
   HiOutlineUserCircle
 } from 'react-icons/hi2';
-import api from '@/context/api';
+import appointmentService from '@/services/appointmentService';
 import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
 import { PageHeader } from '@/components/PageHeader';
@@ -51,7 +51,7 @@ const AppointmentsPage = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/appointments');
+      const res = await appointmentService.list();
       if (res.data.success) {
         setAppointments(res.data.data);
       }
@@ -68,7 +68,7 @@ const AppointmentsPage = () => {
 
   const handleAction = async (id: string, action: 'accept' | 'reject') => {
     try {
-      const res = await api.patch(`/appointments/${id}/${action}`);
+      const res = await appointmentService.respond(id, action);
       if (res.data.success) {
         toast.success(`Session ${action === 'accept' ? 'approved' : 'declined'}`);
         fetchAppointments();
