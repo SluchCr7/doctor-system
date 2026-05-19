@@ -18,8 +18,14 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         console.error('Session expired');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+        if (
+          typeof window !== 'undefined' && 
+          !window.location.pathname.startsWith('/login') &&
+          !window.location.pathname.startsWith('/register') &&
+          !window.location.pathname.startsWith('/forgot-password') &&
+          !window.location.pathname.startsWith('/reset-password')
+        ) {
+          window.location.href = `/login?redirect=${window.location.pathname}`;
         }
         return Promise.reject(refreshError);
       }

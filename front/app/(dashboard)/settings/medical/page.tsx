@@ -18,7 +18,6 @@ const MedicalRecordsPage = () => {
     
     // Patient self-filled data
     const [age, setAge] = useState(user?.profileData?.age || '');
-    const [dob, setDob] = useState(user?.profileData?.dob ? user.profileData.dob.split('T')[0] : '');
     const [bloodType, setBloodType] = useState(user?.profileData?.bloodType || '');
     const [insurance, setInsurance] = useState(user?.profileData?.insuranceProvider || '');
     const [emergency, setEmergency] = useState({
@@ -39,7 +38,6 @@ const MedicalRecordsPage = () => {
     useEffect(() => {
         if (user?.profileData) {
             setAge(user.profileData.age || '');
-            setDob(user.profileData.dob ? user.profileData.dob.split('T')[0] : '');
             setBloodType(user.profileData.bloodType || '');
             setInsurance(user.profileData.insuranceProvider || '');
             setEmergency({
@@ -75,7 +73,6 @@ const MedicalRecordsPage = () => {
                 profileData: {
                     ...user?.profileData,
                     age: age ? Number(age) : undefined,
-                    dob: dob || undefined,
                     bloodType,
                     insuranceProvider: insurance,
                     emergencyContact: emergency,
@@ -191,10 +188,6 @@ const MedicalRecordsPage = () => {
                                         {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bt => <option key={bt} value={bt}>{bt}</option>)}
                                     </select>
                                 </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Date of Birth</label>
-                                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary/5 transition-all" />
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Insurance Provider</label>

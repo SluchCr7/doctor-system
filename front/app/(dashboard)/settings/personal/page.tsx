@@ -101,7 +101,7 @@ export default function PersonalInfoSettings() {
     label, name, value, placeholder = '', type = 'text', icon: Icon, disabled = false,
   }: {
     label: string; name: string; value: string | number; placeholder?: string;
-    type?: string; icon?: React.ComponentType<{ size: number }>; disabled?: boolean;
+    type?: string; icon?: React.ComponentType<{ size?: number; className?: string }>; disabled?: boolean;
   }) => (
     <div className="space-y-2">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>

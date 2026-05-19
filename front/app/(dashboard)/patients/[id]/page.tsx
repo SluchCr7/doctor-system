@@ -116,7 +116,7 @@ export default function PatientProfileForDoctor() {
                                     <Button onClick={async () => {
                                         try {
                                             const payload: any = { name: editForm.name, profileData: { phone: editForm.phone, address: editForm.address } };
-                                            const res = await patientService.updatePatientById(id, payload);
+                                            const res = await patientService.updatePatientById(id as string, payload);
                                             if (res.data.success) {
                                                 setPatient(res.data.data);
                                                 setIsEditing(false);

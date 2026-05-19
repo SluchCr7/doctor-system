@@ -9,6 +9,9 @@ import {
     FiUser, FiHash, FiCalendar
 } from "react-icons/fi";
 
+import financialService from "@/services/financialService";
+import toast from "react-hot-toast";
+
 interface PaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -45,14 +48,22 @@ const PaymentModal = ({
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Simulate processing
-        setTimeout(() => {
+        try {
+            await financialService.pay({
+                invoiceId: invoiceId && invoiceId !== "manual" ? invoiceId : undefined,
+                amount: finalAmount,
+                paymentMethod: formData.method,
+                description: formData.notes || undefined
+            });
             setIsLoading(false);
             setStep("success");
-        }, 1200);
+        } catch (err: any) {
+            setIsLoading(false);
+            toast.error(err.response?.data?.message || "Failed to process payment");
+        }
     };
 
     const handleClose = () => {

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     FiPieChart,
     FiTrendingUp,
@@ -11,8 +11,56 @@ import {
     FiFilter,
     FiActivity
 } from "react-icons/fi";
+import financialService from "@/services/financialService";
+import toast from "react-hot-toast";
 
 const ReportsPage = () => {
+    const [stats, setStats] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchReports = async () => {
+        try {
+            setLoading(true);
+            const res = await financialService.getStats();
+            if (res.data.success) {
+                setStats(res.data.data);
+            }
+        } catch (err: any) {
+            console.error("Error loading analytics data:", err);
+            toast.error("Failed to load clinical analytics");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchReports();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="space-y-8 p-8 animate-pulse">
+                <div className="h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl" />)}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+                    <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+                </div>
+            </div>
+        );
+    }
+
+    const cards = [
+        { label: "New Patients", value: stats?.totalPatients || 0, trend: "+12.5%", color: "text-primary", bg: "bg-primary/5", icon: FiUsers },
+        { label: "Appointments", value: stats?.totalAppointments || 0, trend: "+5.2%", color: "text-secondary", bg: "bg-secondary/5", icon: FiCalendar },
+        { label: "Rev / Patient", value: `$${stats?.totalPatients > 0 ? Math.round(stats.totalRevenue / stats.totalPatients) : 0}`, trend: "+3.1%", color: "text-accent", bg: "bg-accent/5", icon: FiTrendingUp },
+        { label: "Cancellation", value: `${stats?.cancellationRate || 0}%`, trend: "-1.5%", color: "text-danger", bg: "bg-danger/5", icon: FiTrendingDown },
+    ];
+
+    const maxTrendValue = stats?.revenueTrend ? Math.max(...stats.revenueTrend.map((d: any) => d.v), 1) : 100;
+
     return (
         <div className="space-y-8 p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
@@ -32,12 +80,7 @@ const ReportsPage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { label: "New Patients", value: "142", trend: "+12.5%", color: "text-primary", bg: "bg-primary/5", icon: FiUsers },
-                    { label: "Appointments", value: "842", trend: "+5.2%", color: "text-secondary", bg: "bg-secondary/5", icon: FiCalendar },
-                    { label: "Rev / Patient", value: "$420", trend: "+3.1%", color: "text-accent", bg: "bg-accent/5", icon: FiTrendingUp },
-                    { label: "Cancellation", value: "4.2%", trend: "-1.5%", color: "text-danger", bg: "bg-danger/5", icon: FiTrendingDown },
-                ].map((stat, i) => (
+                {cards.map((stat, i) => (
                     <div key={i} className="medical-card p-6 border-b-4 border-b-slate-100 hover:border-b-primary transition-all group">
                         <div className="flex justify-between items-center mb-4">
                             <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
@@ -68,24 +111,24 @@ const ReportsPage = () => {
                     </div>
 
                     <div className="h-64 flex items-end justify-between gap-4 px-4 border-b border-slate-100 pb-2">
-                        {[
-                            { m: "Sep", v: 40 }, { m: "Oct", v: 65 }, { m: "Nov", v: 55 },
-                            { m: "Dec", v: 85 }, { m: "Jan", v: 75 }, { m: "Feb", v: 95 }
-                        ].map((d, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
-                                <div className="w-full relative">
-                                    <div
-                                        className="w-full bg-primary rounded-t-xl group-hover:bg-primary-light transition-all duration-1000 ease-out shadow-lg shadow-primary/10 relative"
-                                        style={{ height: `${d.v * 2}px` }}
-                                    >
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                            ${d.v}k
+                        {stats?.revenueTrend?.map((d: any, i: number) => {
+                            const barHeight = Math.max(10, Math.round((d.v / maxTrendValue) * 180));
+                            return (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
+                                    <div className="w-full relative">
+                                        <div
+                                            className="w-full bg-primary rounded-t-xl group-hover:bg-primary-light transition-all duration-1000 ease-out shadow-lg shadow-primary/10 relative"
+                                            style={{ height: `${barHeight}px` }}
+                                        >
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                ${d.v}
+                                            </div>
                                         </div>
                                     </div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{d.m}</span>
                                 </div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{d.m}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -98,18 +141,15 @@ const ReportsPage = () => {
                         <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-50 flex items-center justify-center">
                             <div className="absolute inset-0 rounded-full border-[16px] border-primary border-t-transparent border-l-transparent rotate-45"></div>
                             <div className="text-center">
-                                <p className="text-3xl font-black text-slate-800">72%</p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Growth</p>
+                                <p className="text-3xl font-black text-slate-800">
+                                    {stats?.diagnosesDistribution?.[0] ? stats.diagnosesDistribution[0].val : "72%"}
+                                </p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary</p>
                             </div>
                         </div>
 
                         <div className="flex-1 space-y-6">
-                            {[
-                                { label: "Hypertension", val: "35%", color: "bg-primary" },
-                                { label: "Diabetes Type 2", val: "28%", color: "bg-secondary" },
-                                { label: "Respiratory", val: "22%", color: "bg-accent" },
-                                { label: "Other", val: "15%", color: "bg-slate-200" }
-                            ].map(d => (
+                            {stats?.diagnosesDistribution?.map((d: any) => (
                                 <div key={d.label} className="space-y-2">
                                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
                                         <span className="text-slate-500">{d.label}</span>

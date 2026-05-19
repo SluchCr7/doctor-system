@@ -57,15 +57,16 @@ const profileValidations = {
       age: Joi.number().min(0).max(120),
       dob: Joi.date().iso().allow('', null),
       bloodType: Joi.string().max(10).allow('', null),
-      gender: Joi.string().valid('male', 'female', 'other'),
+      gender: Joi.string().valid('male', 'female', 'other').allow('', null),
+      bio: Joi.string().max(1000).allow('', null),
       insuranceProvider: Joi.string().max(100).allow('', null),
       emergencyContact: Joi.object({
         name: Joi.string().max(100).allow('', null),
         phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
         relation: Joi.string().max(50).allow('', null)
       }).unknown(true)
-    })
-  }).min(1),
+    }).unknown(true)
+  }).min(1).unknown(true),
 
   updateDoctor: Joi.object({
     name: Joi.string().min(2).max(50).trim(),
@@ -73,7 +74,7 @@ const profileValidations = {
     profileData: Joi.object({
       phone: Joi.string().pattern(/^\+?[0-9\s-]{7,15}$/).allow('', null),
       address: Joi.string().max(200).allow('', null),
-      gender: Joi.string().valid('male', 'female', 'other'),
+      gender: Joi.string().valid('male', 'female', 'other').allow('', null),
       // Professional
       specialization: Joi.string().max(100).allow('', null),
       qualifications: Joi.string().max(200).allow('', null),
@@ -88,7 +89,7 @@ const profileValidations = {
       clinicImage: Joi.string().allow('', null),
       consultationFee: Joi.number().min(0)
     }).unknown(true)
-  }).unknown(true),
+  }).min(1).unknown(true),
 
   updateAvailability: Joi.object({
     days: Joi.array().items(Joi.object().unknown(true)),

@@ -5,6 +5,7 @@ const doctorService = {
   getPatients: () => api.get('/doctor/patients'),
   getDoctorById: (id: string) => api.get(`/doctor/${id}`),
   searchDoctors: (query: string) => api.get(`/doctor/search?q=${encodeURIComponent(query)}`),
+  getProfile: () => api.get('/doctor/profile'),
 };
 
 export default doctorService;
