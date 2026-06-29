@@ -16,6 +16,10 @@ const InvoiceSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  appointmentId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Appointment'
+  },
   transactionId: {
     type: mongoose.Schema.ObjectId,
     ref: 'Transaction'
@@ -26,6 +30,10 @@ const InvoiceSchema = new mongoose.Schema({
     price: Number,
     total: Number
   }],
+  consultationFee: {
+    type: Number,
+    default: 0
+  },
   subtotal: {
     type: Number,
     required: true
@@ -38,9 +46,26 @@ const InvoiceSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  amountPaid: {
+    type: Number,
+    default: 0
+  },
+  clinicShare: {
+    type: Number,
+    default: 0
+  },
+  doctorShare: {
+    type: Number,
+    default: 0
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'card', 'visa', 'mastercard', 'fawry', 'instapay', 'insurance', 'bank_transfer', 'Credit Card', 'Debit Card', 'Cash', 'Bank Transfer'],
+    default: 'cash'
+  },
   status: {
     type: String,
-    enum: ['unpaid', 'paid', 'void'],
+    enum: ['unpaid', 'partially_paid', 'paid', 'void'],
     default: 'unpaid'
   },
   dueDate: Date,

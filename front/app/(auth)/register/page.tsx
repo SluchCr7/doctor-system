@@ -256,15 +256,14 @@ export default function RegisterPage() {
               ) : (
                 <>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chronological Age</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chronological Age (Optional)</label>
                     <input
                       type="number"
                       name="profileData.age"
-                      value={formData.profileData.age}
+                      value={formData.profileData.age || ''}
                       onChange={handleChange}
                       className="block w-full px-5 py-4 bg-white border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all shadow-sm"
                       placeholder="25"
-                      required
                     />
                   </div>
                   <div className="space-y-2">
@@ -285,7 +284,7 @@ export default function RegisterPage() {
               )}
 
               <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Personal Mailing Address</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Personal Mailing Address (Optional)</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <MapPin size={18} />
@@ -297,7 +296,6 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     className="block w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all shadow-sm"
                     placeholder="123 Medical Dr, New York, NY"
-                    required
                   />
                 </div>
               </div>

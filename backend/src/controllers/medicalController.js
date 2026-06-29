@@ -6,11 +6,24 @@ const User = require('../models/User');
 // @route   GET /api/medical
 // @access  Private
 exports.getMedicalRecords = asyncHandler(async (req, res, next) => {
-  let query = req.user.role === 'doctor' ? { doctorId: req.user.id } : { patientId: req.user.id };
-  
-  // If doctor specified a specific patient
-  if (req.user.role === 'doctor' && req.query.patientId) {
-    query = { patientId: req.query.patientId };
+  let query;
+  if (req.user.role === 'patient') {
+    query = { patientId: req.user.id };
+  } else if (req.user.role === 'doctor') {
+    if (req.query.patientId) {
+      // Security: Check if this doctor has a relation with this patient
+      const Appointment = require('../models/Appointment');
+      const hasRelation = await Appointment.exists({ doctorId: req.user.id, patientId: req.query.patientId });
+      if (!hasRelation) {
+        return res.status(403).json({ success: false, message: 'Access denied: You do not have a booked appointment with this patient.' });
+      }
+      query = { patientId: req.query.patientId };
+    } else {
+      query = { doctorId: req.user.id };
+    }
+  } else {
+    // Admin sees all or filtered
+    query = req.query.patientId ? { patientId: req.query.patientId } : {};
   }
 
   const records = await MedicalRecord.find(query)
@@ -77,8 +90,20 @@ exports.getMedicalRecord = asyncHandler(async (req, res, next) => {
   }
 
   // Check if they are allowed to see it
-  if (record.patientId._id.toString() !== req.user.id && record.doctorId._id.toString() !== req.user.id) {
-    return res.status(403).json({ success: false, message: 'Forbidden' });
+  if (req.user.role !== 'admin') {
+    if (req.user.role === 'patient' && record.patientId._id.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    if (req.user.role === 'doctor') {
+      const isAuthor = record.doctorId && record.doctorId._id.toString() === req.user.id;
+      if (!isAuthor) {
+        const Appointment = require('../models/Appointment');
+        const hasRelation = await Appointment.exists({ doctorId: req.user.id, patientId: record.patientId._id });
+        if (!hasRelation) {
+          return res.status(403).json({ success: false, message: 'Access denied: You do not have a relationship with this patient.' });
+        }
+      }
+    }
   }
 
   res.status(200).json({

@@ -2,6 +2,107 @@ const asyncHandler = require('express-async-handler');
 const Appointment = require('../models/Appointment');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const DoctorAvailability = require('../models/DoctorAvailability');
+const Invoice = require('../models/Invoice');
+
+/**
+ * Check if doctor is available at the requested date/time, and verify no double-bookings exist.
+ */
+const checkDoctorAvailabilityAndConflict = async (doctorId, appointmentDate, excludeAppointmentId = null) => {
+  const date = new Date(appointmentDate);
+  if (isNaN(date.getTime())) {
+    return { available: false, message: 'Invalid appointment date format' };
+  }
+
+  // 1. Get Doctor availability
+  let availability = await DoctorAvailability.findOne({ doctorId });
+  if (!availability) {
+    // Fallback to standard clinic working hours
+    availability = {
+      slotDuration: 30,
+      bufferTime: 10,
+      days: [
+        { name: 'Monday', active: true, from: '09:00', to: '18:00', breakFrom: '13:00', breakTo: '14:00' },
+        { name: 'Tuesday', active: true, from: '09:00', to: '18:00', breakFrom: '13:00', breakTo: '14:00' },
+        { name: 'Wednesday', active: true, from: '09:00', to: '18:00', breakFrom: '13:00', breakTo: '14:00' },
+        { name: 'Thursday', active: true, from: '09:00', to: '18:00', breakFrom: '13:00', breakTo: '14:00' },
+        { name: 'Friday', active: true, from: '09:00', to: '18:00', breakFrom: '13:00', breakTo: '14:00' },
+        { name: 'Saturday', active: false, from: '09:00', to: '18:00' },
+        { name: 'Sunday', active: false, from: '09:00', to: '18:00' }
+      ]
+    };
+  }
+
+  // 2. Identify the day of week
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayName = dayNames[date.getDay()];
+
+  const daySchedule = availability.days.find(d => d.name === dayName);
+  if (!daySchedule || !daySchedule.active) {
+    return { available: false, message: `Doctor is not available on ${dayName}` };
+  }
+
+  // 3. Check working hours
+  const appMinutes = date.getHours() * 60 + date.getMinutes();
+  const duration = availability.slotDuration || 30;
+  const appEndMinutes = appMinutes + duration;
+
+  const [fromHour, fromMin] = daySchedule.from.split(':').map(Number);
+  const fromMinutes = fromHour * 60 + fromMin;
+  
+  const [toHour, toMin] = daySchedule.to.split(':').map(Number);
+  const toMinutes = toHour * 60 + toMin;
+
+  if (appMinutes < fromMinutes || appEndMinutes > toMinutes) {
+    return { 
+      available: false, 
+      message: `Requested slot starts/ends outside working hours (${daySchedule.from} - ${daySchedule.to})` 
+    };
+  }
+
+  // 4. Check break time
+  if (daySchedule.breakFrom && daySchedule.breakTo) {
+    const [bfHour, bfMin] = daySchedule.breakFrom.split(':').map(Number);
+    const breakFromMinutes = bfHour * 60 + bfMin;
+
+    const [btHour, btMin] = daySchedule.breakTo.split(':').map(Number);
+    const breakToMinutes = btHour * 60 + btMin;
+
+    if (appMinutes < breakToMinutes && appEndMinutes > breakFromMinutes) {
+      return { 
+        available: false, 
+        message: `Requested time slot is during doctor's break (${daySchedule.breakFrom} - ${daySchedule.breakTo})` 
+      };
+    }
+  }
+
+  // 5. Prevent double booking: check overlap with existing active appointments
+  const reqStart = date;
+  const reqEnd = new Date(reqStart.getTime() + duration * 60 * 1000);
+
+  const query = {
+    doctorId,
+    status: { $in: ['pending', 'confirmed'] },
+    date: {
+      $gt: new Date(reqStart.getTime() - duration * 60 * 1000),
+      $lt: reqEnd
+    }
+  };
+
+  if (excludeAppointmentId) {
+    query._id = { $ne: excludeAppointmentId };
+  }
+
+  const conflict = await Appointment.findOne(query);
+  if (conflict) {
+    return { 
+      available: false, 
+      message: 'This time slot is no longer available (double-booking conflict)' 
+    };
+  }
+
+  return { available: true, availabilityDoc: availability };
+};
 
 // @desc    Book a new appointment
 // @route   POST /api/appointments
@@ -17,12 +118,54 @@ exports.bookAppointment = asyncHandler(async (req, res, next) => {
     return res.status(404).json({ success: false, message: 'Doctor not found' });
   }
 
+  // Validate working hours, breaks, and conflict
+  const validation = await checkDoctorAvailabilityAndConflict(doctorId, date);
+  if (!validation.available) {
+    return res.status(400).json({ success: false, message: validation.message });
+  }
+
   // Create appointment
   const appointment = await Appointment.create({
     patientId,
     doctorId,
     date,
     notes
+  });
+
+  // Calculate fees & taxes
+  const consultationFee = doctor.profileData?.consultationFee || 100;
+  const subtotal = consultationFee;
+  const taxRate = 0.10; // 10% tax
+  const tax = Math.round((subtotal * taxRate) * 100) / 100;
+  const total = Math.round((subtotal + tax) * 100) / 100;
+
+  // Revenue split: 20% clinic, 80% doctor
+  const commissionRate = 0.20;
+  const clinicShare = Math.round((total * commissionRate) * 100) / 100;
+  const doctorShare = Math.round((total * (1 - commissionRate)) * 100) / 100;
+
+  const invoiceNumber = 'INV-' + Date.now().toString().slice(-6) + Math.floor(10 + Math.random() * 90);
+
+  // Automatically generate invoice
+  await Invoice.create({
+    invoiceNumber,
+    patientId,
+    doctorId,
+    appointmentId: appointment._id,
+    items: [{
+      description: 'Medical Consultation',
+      quantity: 1,
+      price: consultationFee,
+      total: consultationFee
+    }],
+    consultationFee,
+    subtotal,
+    tax,
+    total,
+    amountPaid: 0,
+    clinicShare,
+    doctorShare,
+    status: 'unpaid'
   });
 
   // Notify doctor
@@ -80,12 +223,43 @@ exports.updateAppointment = asyncHandler(async (req, res, next) => {
   }
 
   // Permission check
-  // Doctor can update status
-  // Patient can update notes/date (if pending)
   if (req.user.role === 'patient' && appointment.patientId.toString() !== req.user.id) {
     return res.status(403).json({ success: false, message: 'Not authorized to update this appointment' });
   } else if (req.user.role === 'doctor' && appointment.doctorId.toString() !== req.user.id) {
     return res.status(403).json({ success: false, message: 'Not authorized to update this appointment' });
+  }
+
+  // State Machine Validation
+  if (appointment.status === 'completed' || appointment.status === 'cancelled') {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Cannot update an appointment that is already ${appointment.status}` 
+    });
+  }
+
+  // Check state transitions
+  if (status) {
+    const validTransitions = {
+      pending: ['confirmed', 'cancelled'],
+      confirmed: ['completed', 'cancelled'],
+      completed: [],
+      cancelled: []
+    };
+    const allowed = validTransitions[appointment.status] || [];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid state transition from ${appointment.status} to ${status}` 
+      });
+    }
+  }
+
+  // Check availability & double-booking if date is updated
+  if (date) {
+    const validation = await checkDoctorAvailabilityAndConflict(appointment.doctorId.toString(), date, appointment._id);
+    if (!validation.available) {
+      return res.status(400).json({ success: false, message: validation.message });
+    }
   }
 
   const updateFields = {};
@@ -97,6 +271,11 @@ exports.updateAppointment = asyncHandler(async (req, res, next) => {
     new: true,
     runValidators: true
   });
+
+  // Void invoice if cancelled
+  if (status === 'cancelled') {
+    await Invoice.findOneAndUpdate({ appointmentId: appointment._id }, { status: 'void' });
+  }
 
   // Notify parties
   if (status) {
@@ -136,6 +315,9 @@ exports.deleteAppointment = asyncHandler(async (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Not authorized to delete this appointment' });
   }
 
+  // Void Invoice
+  await Invoice.findOneAndUpdate({ appointmentId: appointmentId }, { status: 'void' });
+
   await appointment.deleteOne();
 
   res.status(200).json({
@@ -143,6 +325,7 @@ exports.deleteAppointment = asyncHandler(async (req, res, next) => {
     data: {}
   });
 });
+
 // @desc    Accept appointment
 // @route   PATCH /api/appointments/:id/accept
 // @access  Private/Doctor
@@ -155,6 +338,11 @@ exports.acceptAppointment = asyncHandler(async (req, res, next) => {
 
   if (appointment.doctorId.toString() !== req.user.id) {
     return res.status(403).json({ success: false, message: 'Not authorized to accept this appointment' });
+  }
+
+  // State Machine check
+  if (appointment.status !== 'pending') {
+    return res.status(400).json({ success: false, message: `Cannot accept appointment in ${appointment.status} state` });
   }
 
   appointment = await Appointment.findByIdAndUpdate(req.params.id, { status: 'confirmed' }, {
@@ -194,10 +382,18 @@ exports.rejectAppointment = asyncHandler(async (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Not authorized to reject this appointment' });
   }
 
+  // State Machine check
+  if (appointment.status !== 'pending') {
+    return res.status(400).json({ success: false, message: `Cannot reject appointment in ${appointment.status} state` });
+  }
+
   appointment = await Appointment.findByIdAndUpdate(req.params.id, { status: 'cancelled' }, {
     new: true,
     runValidators: true
   });
+
+  // Void Invoice
+  await Invoice.findOneAndUpdate({ appointmentId: appointment._id }, { status: 'void' });
 
   // Notify patient
   const { createNotification } = require('../utils/notifHelper');

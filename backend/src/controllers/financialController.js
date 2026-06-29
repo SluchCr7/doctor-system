@@ -5,11 +5,18 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
 
-// @desc    Get all transactions for current user
+// @desc    Get all transactions for current user (Filtered by role)
 // @route   GET /api/financial/transactions
 // @access  Private
 exports.getTransactions = asyncHandler(async (req, res, next) => {
-  const query = req.user.role === 'doctor' ? { doctorId: req.user.id } : { patientId: req.user.id };
+  let query = {};
+  if (req.user.role === 'doctor') {
+    query = { doctorId: req.user.id };
+  } else if (req.user.role === 'patient') {
+    query = { patientId: req.user.id };
+  } else if (req.user.role === 'admin') {
+    query = {}; // Admin sees all
+  }
   
   const transactions = await Transaction.find(query)
     .populate('patientId', 'name email profileImage')
@@ -23,11 +30,18 @@ exports.getTransactions = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Get all invoices for current user
+// @desc    Get all invoices for current user (Filtered by role)
 // @route   GET /api/financial/invoices
 // @access  Private
 exports.getInvoices = asyncHandler(async (req, res, next) => {
-  const query = req.user.role === 'doctor' ? { doctorId: req.user.id } : { patientId: req.user.id };
+  let query = {};
+  if (req.user.role === 'doctor') {
+    query = { doctorId: req.user.id };
+  } else if (req.user.role === 'patient') {
+    query = { patientId: req.user.id };
+  } else if (req.user.role === 'admin') {
+    query = {}; // Admin sees all
+  }
   
   const invoices = await Invoice.find(query)
     .populate('patientId', 'name email')
@@ -41,34 +55,53 @@ exports.getInvoices = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Create a transaction (simulated payment)
+// @desc    Create a transaction (simulated payment with partial payment support)
 // @route   POST /api/financial/pay
-// @access  Private/Patient
+// @access  Private/Patient/Doctor/Admin
 exports.createTransaction = asyncHandler(async (req, res, next) => {
   const { appointmentId, invoiceId, amount, paymentMethod, description } = req.body;
 
+  // Handle payments with an invoice
   if (invoiceId) {
     const invoice = await Invoice.findById(invoiceId);
     if (!invoice) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
     }
 
-    // Generate a random transaction ID
-    const transactionId = 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    // Default payment amount to remaining balance if not provided
+    const remainingBalance = invoice.total - (invoice.amountPaid || 0);
+    const paymentAmount = amount !== undefined ? Number(amount) : remainingBalance;
+
+    if (paymentAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
+    }
+
+    // Generate transaction ID
+    const txnId = 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
     const transaction = await Transaction.create({
       patientId: invoice.patientId,
       doctorId: invoice.doctorId,
-      amount: amount || invoice.total,
-      paymentMethod,
+      appointmentId: invoice.appointmentId,
+      amount: paymentAmount,
+      paymentMethod: paymentMethod ? paymentMethod.toLowerCase() : 'card',
       description: description || `Payment for Invoice ${invoice.invoiceNumber}`,
-      transactionId,
+      transactionId: txnId,
       status: 'completed'
     });
 
-    invoice.status = 'paid';
+    // Update invoice state
+    invoice.amountPaid = (invoice.amountPaid || 0) + paymentAmount;
+    invoice.paymentMethod = paymentMethod ? paymentMethod.toLowerCase() : 'card';
     invoice.transactionId = transaction._id;
     invoice.paidDate = new Date();
+
+    if (invoice.amountPaid >= invoice.total) {
+      invoice.status = 'paid';
+    } else {
+      invoice.status = 'partially_paid';
+    }
+
     await invoice.save();
 
     // Notify Doctor
@@ -76,8 +109,8 @@ exports.createTransaction = asyncHandler(async (req, res, next) => {
     await createNotification({
       recipient: invoice.doctorId,
       sender: req.user.id,
-      title: 'Invoice Paid',
-      message: `Invoice ${invoice.invoiceNumber} has been paid ($${amount || invoice.total}).`,
+      title: invoice.status === 'paid' ? 'Invoice Paid' : 'Partial Payment Received',
+      message: `Invoice ${invoice.invoiceNumber} has been updated. Paid amount: $${paymentAmount}. Status: ${invoice.status}`,
       type: 'invoice',
       relatedId: invoice._id,
       onModel: 'Invoice'
@@ -89,40 +122,58 @@ exports.createTransaction = asyncHandler(async (req, res, next) => {
     });
   }
 
+  // Handle payments without an invoice (direct booking payments)
   const appointment = await Appointment.findById(appointmentId);
   if (!appointment) {
     return res.status(404).json({ success: false, message: 'Appointment not found' });
   }
 
-  // Generate a random transaction ID
-  const transactionId = 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+  const paymentAmount = Number(amount);
+  if (isNaN(paymentAmount) || paymentAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Payment amount is required and must be positive' });
+  }
+
+  // Generate transaction ID
+  const txnId = 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
   const transaction = await Transaction.create({
     patientId: req.user.id,
     doctorId: appointment.doctorId,
     appointmentId,
-    amount,
-    paymentMethod,
+    amount: paymentAmount,
+    paymentMethod: paymentMethod ? paymentMethod.toLowerCase() : 'card',
     description,
-    transactionId,
+    transactionId: txnId,
     status: 'completed'
   });
 
-  // Create an invoice automatically
-  const invoiceNumber = 'INV-' + Date.now().toString().slice(-6);
+  // Calculate split commission shares (20% clinic, 80% doctor)
+  const commissionRate = 0.20;
+  const clinicShare = Math.round((paymentAmount * commissionRate) * 100) / 100;
+  const doctorShare = Math.round((paymentAmount * (1 - commissionRate)) * 100) / 100;
+
+  // Create invoice automatically
+  const invoiceNumber = 'INV-' + Date.now().toString().slice(-6) + Math.floor(10 + Math.random() * 90);
   const invoice = await Invoice.create({
     invoiceNumber,
     patientId: req.user.id,
     doctorId: appointment.doctorId,
+    appointmentId,
     transactionId: transaction._id,
     items: [{
       description: description || 'Medical Consultation',
       quantity: 1,
-      price: amount,
-      total: amount
+      price: paymentAmount,
+      total: paymentAmount
     }],
-    subtotal: amount,
-    total: amount,
+    consultationFee: paymentAmount,
+    subtotal: paymentAmount,
+    tax: 0,
+    total: paymentAmount,
+    amountPaid: paymentAmount,
+    clinicShare,
+    doctorShare,
+    paymentMethod: paymentMethod ? paymentMethod.toLowerCase() : 'card',
     status: 'paid',
     paidDate: new Date()
   });
@@ -133,7 +184,7 @@ exports.createTransaction = asyncHandler(async (req, res, next) => {
     recipient: appointment.doctorId,
     sender: req.user.id,
     title: 'Payment Received',
-    message: `${req.user.name} has paid $${amount} for ${description || 'Consultation'}.`,
+    message: `${req.user.name} has paid $${paymentAmount} for ${description || 'Consultation'}.`,
     type: 'invoice',
     relatedId: invoice._id,
     onModel: 'Invoice'
@@ -149,34 +200,37 @@ exports.createTransaction = asyncHandler(async (req, res, next) => {
 // @route   GET /api/financial/stats
 // @access  Private/Doctor
 exports.getFinancialStats = asyncHandler(async (req, res, next) => {
-  if (req.user.role !== 'doctor') {
+  if (req.user.role !== 'doctor' && req.user.role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Forbidden' });
   }
 
-  const doctorId = req.user._id || req.user.id;
+  const doctorId = req.user.id;
+
+  // Filter stats strictly by doctor if role is doctor
+  const query = req.user.role === 'doctor' ? { doctorId } : {};
 
   // 1. Transaction stats
   const transactions = await Transaction.find({ 
-    doctorId,
+    ...query,
     status: 'completed'
   });
 
   const totalRevenue = transactions.reduce((acc, curr) => acc + curr.amount, 0);
 
-  // 2. Pending payments (unpaid invoices)
+  // 2. Pending payments (unpaid & partially paid invoices)
   const pendingPaymentsCount = await Invoice.countDocuments({
-    doctorId,
-    status: 'unpaid'
+    ...query,
+    status: { $in: ['unpaid', 'partially_paid'] }
   });
 
   // 3. Registered patient counts
   const totalPatients = await User.countDocuments({ role: 'patient' });
 
   // 4. Appointments & cancellation stats
-  const totalAppointments = await Appointment.countDocuments({ doctorId });
+  const totalAppointments = await Appointment.countDocuments(query);
   const cancelledAppointments = await Appointment.countDocuments({ 
-    doctorId, 
-    status: { $in: ['cancelled', 'rejected'] } 
+    ...query,
+    status: 'cancelled' 
   });
   
   const cancellationRate = totalAppointments > 0 
@@ -189,13 +243,17 @@ exports.getFinancialStats = asyncHandler(async (req, res, next) => {
   sixMonthsAgo.setDate(1);
   sixMonthsAgo.setHours(0, 0, 0, 0);
 
+  const matchQuery = {
+    status: 'completed',
+    createdAt: { $gte: sixMonthsAgo }
+  };
+  if (req.user.role === 'doctor') {
+    matchQuery.doctorId = req.user._id || req.user.id;
+  }
+
   const monthlyTrans = await Transaction.aggregate([
     {
-      $match: {
-        doctorId,
-        status: 'completed',
-        createdAt: { $gte: sixMonthsAgo }
-      }
+      $match: matchQuery
     },
     {
       $group: {
@@ -209,7 +267,6 @@ exports.getFinancialStats = asyncHandler(async (req, res, next) => {
     { $sort: { '_id.year': 1, '_id.month': 1 } }
   ]);
 
-  const months = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
   const revenueTrend = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date();
@@ -225,9 +282,10 @@ exports.getFinancialStats = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // 6. Diagnoses aggregation
+  // 6. Diagnoses aggregation (only if doctorId is relevant)
+  const diagMatch = req.user.role === 'doctor' ? { doctorId } : {};
   const diagnosesStats = await MedicalRecord.aggregate([
-    { $match: { doctorId } },
+    { $match: diagMatch },
     { $group: { _id: '$diagnosis', count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 4 }

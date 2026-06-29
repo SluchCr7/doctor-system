@@ -26,11 +26,11 @@ exports.getPatientById = asyncHandler(async (req, res, next) => {
   }
 
   // Security: Check if this doctor has an appointment with this patient
-  const hasAppointment = await Appointment.exists({ doctorId: req.user.id, patientId: patient._id });
-  
-  if (!hasAppointment && req.user.role !== 'admin') {
-    // Optionally allow viewing but restrict medical history if no relation
-    // For now, let's allow it if they are a doctor (as per requirement: "clicks on any patient")
+  if (req.user.role === 'doctor') {
+    const hasAppointment = await Appointment.exists({ doctorId: req.user.id, patientId: patient._id });
+    if (!hasAppointment) {
+      return res.status(403).json({ success: false, message: 'Access denied: You can only view patients booked with you.' });
+    }
   }
 
   res.status(200).json({

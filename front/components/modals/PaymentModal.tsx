@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -39,10 +39,23 @@ const PaymentModal = ({
         method: "Cash",
         notes: "",
         discount: "0",
+        amountPaidNow: "",
     });
 
     const discount = parseFloat(formData.discount) || 0;
     const finalAmount = Math.max(0, amount - discount);
+    const amountPaidNow = formData.amountPaidNow !== "" ? parseFloat(formData.amountPaidNow) : finalAmount;
+
+    useEffect(() => {
+        if (isOpen) {
+            setFormData({
+                method: "Cash",
+                notes: "",
+                discount: "0",
+                amountPaidNow: "",
+            });
+        }
+    }, [isOpen]);
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -50,11 +63,20 @@ const PaymentModal = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (amountPaidNow <= 0) {
+            toast.error("Please enter a valid payment amount");
+            return;
+        }
+        if (amountPaidNow > finalAmount) {
+            toast.error("Payment amount cannot exceed the total amount due");
+            return;
+        }
+
         setIsLoading(true);
         try {
             await financialService.pay({
                 invoiceId: invoiceId && invoiceId !== "manual" ? invoiceId : undefined,
-                amount: finalAmount,
+                amount: amountPaidNow,
                 paymentMethod: formData.method,
                 description: formData.notes || undefined
             });
@@ -70,7 +92,7 @@ const PaymentModal = ({
         onClose();
         setTimeout(() => {
             setStep("form");
-            setFormData({ method: "Cash", notes: "", discount: "0" });
+            setFormData({ method: "Cash", notes: "", discount: "0", amountPaidNow: "" });
         }, 300);
     };
 
@@ -78,6 +100,8 @@ const PaymentModal = ({
         onSuccess?.();
         handleClose();
     };
+
+    const isPartial = amountPaidNow < finalAmount;
 
     return (
         <Modal
@@ -94,9 +118,11 @@ const PaymentModal = ({
                         <FiCheckCircle className="w-10 h-10 text-emerald-500" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-slate-800">Payment Recorded!</h3>
+                        <h3 className="text-xl font-bold text-slate-800">
+                            {isPartial ? "Partial Payment Recorded!" : "Payment Recorded!"}
+                        </h3>
                         <p className="text-sm text-slate-500 mt-1">
-                            ${finalAmount.toFixed(2)} received via {formData.method}
+                            ${amountPaidNow.toFixed(2)} received via {formData.method}
                         </p>
                     </div>
                     <div className="w-full bg-slate-50 rounded-2xl border border-slate-100 p-5 text-left space-y-3">
@@ -115,9 +141,15 @@ const PaymentModal = ({
                             <span className="font-semibold text-slate-800">{formData.method}</span>
                         </div>
                         <div className="flex justify-between text-sm border-t border-slate-100 pt-3">
-                            <span className="text-slate-700 font-semibold">Total Paid</span>
-                            <span className="font-bold text-emerald-600 text-base">${finalAmount.toFixed(2)}</span>
+                            <span className="text-slate-700 font-semibold">Amount Paid</span>
+                            <span className="font-bold text-emerald-600 text-base">${amountPaidNow.toFixed(2)}</span>
                         </div>
+                        {isPartial && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Remaining Balance</span>
+                                <span className="font-semibold text-slate-800">${(finalAmount - amountPaidNow).toFixed(2)}</span>
+                            </div>
+                        )}
                     </div>
                     <Button onClick={handleDone} className="w-full">Done</Button>
                 </div>
@@ -155,8 +187,10 @@ const PaymentModal = ({
                         label="Payment Method"
                         options={[
                             { label: "Cash", value: "Cash" },
-                            { label: "Credit Card", value: "Credit Card" },
-                            { label: "Debit Card", value: "Debit Card" },
+                            { label: "Visa", value: "Visa" },
+                            { label: "Mastercard", value: "Mastercard" },
+                            { label: "Fawry", value: "Fawry" },
+                            { label: "InstaPay", value: "InstaPay" },
                             { label: "Insurance", value: "Insurance" },
                             { label: "Bank Transfer", value: "Bank Transfer" },
                         ]}
@@ -174,6 +208,19 @@ const PaymentModal = ({
                         leftIcon={<FiDollarSign />}
                         value={formData.discount}
                         onChange={e => handleChange("discount", e.target.value)}
+                    />
+
+                    <Input
+                        label="Amount to Pay Now ($)"
+                        type="number"
+                        min="0.01"
+                        max={finalAmount.toString()}
+                        step="0.01"
+                        placeholder={finalAmount.toFixed(2)}
+                        leftIcon={<FiDollarSign />}
+                        value={formData.amountPaidNow}
+                        onChange={e => handleChange("amountPaidNow", e.target.value)}
+                        required
                     />
 
                     {/* Final Amount Preview */}
